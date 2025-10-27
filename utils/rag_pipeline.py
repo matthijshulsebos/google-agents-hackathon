@@ -80,10 +80,13 @@ class RAGPipeline:
             Dictionary with answer and metadata
         """
         try:
-            # Step 1: Retrieve relevant documents from Vertex AI Search
-            logger.info(f"Searching for: {query[:50]}...")
+            # Step 1: Enhance query with conversation context for better retrieval
+            enhanced_query = self._enhance_query_with_context(query, conversation_history)
+
+            # Step 2: Retrieve relevant documents from Vertex AI Search
+            logger.info(f"Searching for: {enhanced_query[:50]}...")
             search_results = self.search_adapter.search(
-                query=query,
+                query=enhanced_query,
                 page_size=max_search_results,
                 query_expansion=False,  # Disable for multi-datastore
                 spell_correction=False
@@ -126,6 +129,50 @@ class RAGPipeline:
                 "message": str(e),
                 "answer": None
             }
+
+    def _enhance_query_with_context(
+        self,
+        query: str,
+        conversation_history: Optional[List[Dict[str, str]]]
+    ) -> str:
+        """
+        Enhance search query with context from conversation history
+
+        This helps the search engine find relevant documents when the current query
+        contains pronouns or references to previous conversation turns.
+
+        Args:
+            query: Current user query
+            conversation_history: Previous conversation turns
+
+        Returns:
+            Enhanced query string for better retrieval
+        """
+        if not conversation_history or len(conversation_history) == 0:
+            return query
+
+        # Get the last user query (most recent context)
+        last_user_query = None
+        for turn in reversed(conversation_history):
+            if turn.get("role") == "user":
+                last_user_query = turn.get("content")
+                break
+
+        # If current query is very short or contains pronouns, enhance with context
+        pronouns = ["it", "that", "this", "they", "them", "its", "those", "these"]
+        query_lower = query.lower()
+
+        # Check if query is short or contains pronouns
+        if (len(query.split()) <= 4 or
+            any(pronoun in query_lower.split() for pronoun in pronouns)):
+
+            if last_user_query:
+                # Combine queries for better search
+                enhanced = f"{last_user_query} {query}"
+                logger.info(f"Enhanced query with context: {query} -> {enhanced[:80]}...")
+                return enhanced
+
+        return query
 
     def _format_conversation_history(self, conversation_history: List[Dict[str, str]]) -> str:
         """
