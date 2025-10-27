@@ -3,7 +3,7 @@ Pharmacy Agent - Specialized agent for medication inventory and pharmaceutical i
 """
 from typing import Dict, Any, List
 import logging
-from utils.vertex_search import BaseAgent
+from utils.rag_pipeline import RAGPipeline
 from agents.prompts.pharmacy_prompts import (
     PHARMACY_SYSTEM_INSTRUCTION,
     get_language_specific_instruction,
@@ -14,10 +14,11 @@ from agents.prompts.pharmacy_prompts import (
 logger = logging.getLogger(__name__)
 
 
-class PharmacyAgent(BaseAgent):
+class PharmacyAgent:
     """
     Agent specialized in medication inventory, drug information, and pharmaceutical guidelines
     Handles queries in English and German
+    Uses RAG (Retrieval Augmented Generation) with Vertex AI Search
     """
 
     def __init__(
@@ -31,16 +32,35 @@ class PharmacyAgent(BaseAgent):
 
         Args:
             project_id: Google Cloud Project ID
-            datastore_id: Vertex AI Search datastore ID for pharmacy documents
+            datastore_id: Vertex AI Search engine ID for pharmacy documents
             location: GCP location
         """
-        super().__init__(
-            agent_type="pharmacy",
+        self.project_id = project_id
+        self.location = location
+        self.agent_type = "pharmacy"
+
+        # Get datastore ID from config if not provided
+        if not datastore_id:
+            from config import Config
+            self.datastore_id = Config.get_datastore_id("pharmacy")
+        else:
+            self.datastore_id = datastore_id
+
+        # Initialize RAG pipeline
+        self.rag = RAGPipeline(
             project_id=project_id,
-            datastore_id=datastore_id,
-            location=location
+            search_engine_id=self.datastore_id,
+            location=location,
+            search_location="global"
         )
-        logger.info("Pharmacy Agent initialized")
+
+        logger.info(f"Pharmacy Agent initialized with RAG pipeline (engine: {self.datastore_id})")
+
+    def detect_language(self, text: str) -> str:
+        """Detect query language (English or German)"""
+        if any(word in text.lower() for word in ['ist', 'haben', 'wie', 'welche', 'verfügbar']):
+            return "de"
+        return "en"
 
     def search_inventory(
         self,
@@ -48,14 +68,14 @@ class PharmacyAgent(BaseAgent):
         temperature: float = 0.2
     ) -> Dict[str, Any]:
         """
-        Search medication inventory and pharmaceutical information
+        Search medication inventory and pharmaceutical information using RAG
 
         Args:
             query: User's question about medications or inventory
             temperature: Model temperature (lower = more focused)
 
         Returns:
-            Dict with answer, citations, and metadata
+            Dict with answer, search results, and metadata
         """
         try:
             # Detect language
@@ -68,16 +88,22 @@ class PharmacyAgent(BaseAgent):
             system_instruction += format_pharmacy_response_template()
             system_instruction += get_inventory_status_explanation(language)
 
-            # Query with search
-            result = self.query(
-                user_query=query,
+            # Use RAG pipeline to generate response
+            result = self.rag.generate_response(
+                query=query,
                 system_instruction=system_instruction,
-                temperature=temperature
+                temperature=temperature,
+                max_search_results=5
             )
 
-            # Add language metadata
+            # Add metadata
+            result['agent'] = 'pharmacy'
             result['language'] = language
             result['domain'] = 'pharmacy'
+
+            # Map search_results to grounding_metadata for compatibility
+            if result.get('search_results'):
+                result['grounding_metadata'] = result['search_results']
 
             # Format response for better readability
             if not result.get('error'):
