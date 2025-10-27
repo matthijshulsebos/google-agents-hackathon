@@ -1,283 +1,492 @@
-# Hospital Multi-Domain Chat System
+# Hospital Multi-Agent Information Retrieval System
 
-An AI-powered search and chat system for hospital staff to query across multiple domains (finance, legal, and healthcare protocols) using natural language.
+A sophisticated multi-agent system built with Google ADK (Application Development Kit) and Vertex AI Search that intelligently routes queries to specialized AI agents for hospital staff.
 
-## Features
+## Overview
 
-- 🔍 **Multi-Domain Search**: Query across finance, legal, and healthcare domains
-- 🤖 **AI-Powered Responses**: Grounded answers using Vertex AI Gemini
-- 💬 **Multi-Turn Conversations**: Context-aware chat with conversation history
-- 📄 **Multiple File Formats**: Supports PDFs, Word, Excel, CSV, HTML, and text files
-- 🎯 **Smart Routing**: Keyword-based and LLM-based query routing
-- 🔗 **Source Attribution**: All answers cite their source documents
-- ☁️ **Cloud Run Deployment**: Scalable, serverless deployment on Google Cloud
+This system serves three primary user types—**Nurses**, **HR Employees**, and **Pharmacists**—with multilingual support across **English**, **Spanish**, **French**, and **German**. The orchestrator intelligently routes queries to specialized agents, each backed by Vertex AI Search for document grounding and accurate information retrieval.
+
+### Key Features
+
+- ✨ **Multi-Agent Orchestration**: Intelligent routing to specialized domain agents
+- 🌐 **Multilingual Support**: EN, ES, FR, DE with automatic language detection
+- 🔍 **Vertex AI Search Integration**: Document grounding with citations
+- 📚 **Domain Expertise**: Specialized agents for Nursing, HR, and Pharmacy
+- 🤖 **Google ADK Powered**: Built on Gemini 2.0 Flash
+- 🎯 **Intelligent Routing**: Keyword and AI-based query classification
 
 ## Architecture
 
-```
-User → Cloud Run Web API → Orchestrator Agent
-                              ↓
-                    Domain-Specific Agents
-                    (Finance, Legal, Healthcare)
-                              ↓
-                    Vertex AI Search Indices
-                              ↓
-                      Vertex AI Gemini
-                              ↓
-                    Grounded Response with Sources
-```
+### Layer 1: Orchestrator
+- Routes queries to appropriate specialized agents
+- Provides intelligent query classification
+- Supports both explicit (role-based) and implicit (content-based) routing
 
-## Prerequisites
+### Layer 2: Specialized Agents
+1. **Nursing Agent** (English/Spanish)
+   - Medical procedures and protocols
+   - Patient care guidelines
+   - Safety procedures
 
-- Google Cloud Platform account
-- Python 3.11+
-- Docker (for deployment)
-- Google Cloud SDK (`gcloud` CLI)
+2. **HR Agent** (English/French)
+   - Leave policies and benefits
+   - Public holidays
+   - Employee procedures
 
-## Setup
+3. **Pharmacy Agent** (English/German)
+   - Medication inventory
+   - Drug information
+   - Storage requirements
 
-### 1. Clone and Configure
+### Layer 3: Vertex AI Search
+- Three separate datastores (one per domain)
+- Document retrieval and grounding
+- Citation extraction
 
-```bash
-cd /home/mat/Documents/google-hackathon
+### Layer 4: Documents
+- 3-5 documents per domain
+- Multiple languages per document
+- Markdown format for easy parsing
 
-# Copy environment template
-cp .env.example .env
+## Technology Stack
 
-# Edit .env with your GCP project details
-nano .env
-```
-
-### 2. Install Dependencies
-
-```bash
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate
-
-# Install requirements
-pip install -r requirements.txt
-```
-
-### 3. Configure Google Cloud
-
-Edit `config.yaml` with your project details:
-- Project ID
-- Location
-- Bucket names
-- Datastore IDs
-
-### 4. Set Up Infrastructure
-
-```bash
-# Authenticate with GCP
-gcloud auth login
-gcloud config set project YOUR_PROJECT_ID
-
-# Create GCS buckets
-python scripts/setup_buckets.py --all
-
-# Create Vertex AI Search datastores
-python scripts/setup_datastores.py --all
-
-# Upload documents to buckets (use GCS console or gsutil)
-gsutil cp -r /path/to/finance/docs gs://finance-bucket/
-gsutil cp -r /path/to/legal/docs gs://legal-bucket/
-gsutil cp -r /path/to/healthcare/docs gs://healthcare-bucket/
-
-# Ingest documents into search indices
-python scripts/ingest_documents.py --all
-```
-
-## Running Locally
-
-```bash
-# Start the API server
-python src/main.py
-
-# In another terminal, run tests
-python tests/test_api.py
-```
-
-The API will be available at `http://localhost:8080`
-
-## API Endpoints
-
-### Chat
-```bash
-POST /chat
-{
-  "query": "What is the hospital budget for equipment?",
-  "conversation_id": "optional-conversation-id",
-  "routing_strategy": "keyword",  # keyword, all, or llm
-  "top_k": 5
-}
-```
-
-### Health Check
-```bash
-GET /health
-```
-
-### List Domains
-```bash
-GET /domains
-```
-
-### Clear Conversation
-```bash
-POST /chat/clear?conversation_id=<id>
-```
-
-## Deployment to Cloud Run
-
-```bash
-# Set environment variables
-export GCP_PROJECT_ID="your-project-id"
-export GCP_LOCATION="us-central1"
-export FINANCE_BUCKET="finance-bucket"
-export LEGAL_BUCKET="legal-bucket"
-export HEALTHCARE_BUCKET="healthcare-bucket"
-export FINANCE_DATASTORE_ID="finance-datastore"
-export LEGAL_DATASTORE_ID="legal-datastore"
-export HEALTHCARE_DATASTORE_ID="healthcare-datastore"
-
-# Deploy
-chmod +x scripts/deploy.sh
-./scripts/deploy.sh
-```
+- **Google ADK** (Gemini 2.0 Flash)
+- **Vertex AI Search** (Document retrieval)
+- **Python 3.10+**
+- **Google Cloud Platform**
+- **Rich** (Terminal UI)
 
 ## Project Structure
 
 ```
-google-hackathon/
-├── src/
-│   ├── main.py                    # FastAPI application
-│   ├── config.py                  # Configuration management
-│   ├── agents/
-│   │   ├── domain_agents.py       # Domain-specific search agents
-│   │   └── orchestrator.py        # Query routing and aggregation
-│   ├── ingestion/
-│   │   ├── document_processor.py  # Multi-format text extraction
-│   │   └── vertex_search.py       # Vertex AI Search integration
-│   └── llm/
-│       └── response_generator.py  # Gemini response generation
-├── scripts/
-│   ├── setup_buckets.py          # Create GCS buckets
-│   ├── setup_datastores.py       # Create search datastores
-│   ├── ingest_documents.py       # Ingest documents to search
-│   └── deploy.sh                 # Deploy to Cloud Run
-├── tests/
-│   └── test_api.py               # Integration tests
-├── config.yaml                    # Application configuration
-├── requirements.txt              # Python dependencies
-├── Dockerfile                    # Container definition
-└── README.md                     # This file
+hospital-multiagent-system/
+├── README.md                   # This file
+├── requirements.txt            # Python dependencies
+├── config.py                   # Configuration management
+├── .env.example               # Environment variables template
+├── .gitignore                 # Git ignore rules
+│
+├── agents/                    # Specialized agents
+│   ├── __init__.py
+│   ├── nursing_agent.py      # Nursing domain agent
+│   ├── hr_agent.py           # HR domain agent
+│   ├── pharmacy_agent.py     # Pharmacy domain agent
+│   └── prompts/              # Agent system instructions
+│       ├── nursing_prompts.py
+│       ├── hr_prompts.py
+│       └── pharmacy_prompts.py
+│
+├── orchestrator.py           # Main orchestrator
+│
+├── utils/                    # Utilities
+│   ├── __init__.py
+│   ├── vertex_search.py     # Vertex AI Search wrapper
+│   └── query_classifier.py # Query classification
+│
+├── docs/                     # Sample documents
+│   ├── nursing/             # Nursing protocols (EN/ES)
+│   ├── hr/                  # HR policies (EN/FR)
+│   └── pharmacy/            # Pharmacy inventory (EN/DE)
+│
+├── tests/                    # Test suite (to be implemented)
+│   └── __init__.py
+│
+├── demo.py                   # Demo script
+│
+└── outputs/                  # Demo results output
+    └── .gitkeep
 ```
 
-## Usage Examples
+## Prerequisites
 
-### Single Domain Query
-```python
-import requests
+### Google Cloud Setup
 
-response = requests.post("http://localhost:8080/chat", json={
-    "query": "What are the financial reporting requirements?",
-    "routing_strategy": "keyword"
-})
-print(response.json()["answer"])
+1. **Google Cloud Project** with billing enabled
+2. **Vertex AI API** enabled
+3. **Vertex AI Search** enabled
+4. **Service Account** with appropriate permissions:
+   - Vertex AI User
+   - Discovery Engine Editor
+
+### Local Requirements
+
+- Python 3.10 or higher
+- pip (Python package manager)
+- Git
+
+## Installation
+
+### 1. Clone the Repository
+
+```bash
+git clone <repository-url>
+cd hospital-multiagent-system
 ```
 
-### Multi-Turn Conversation
-```python
-# First message
-response1 = requests.post("http://localhost:8080/chat", json={
-    "query": "What are patient intake procedures?"
-})
-conv_id = response1.json()["conversation_id"]
+### 2. Create Virtual Environment
 
-# Follow-up with context
-response2 = requests.post("http://localhost:8080/chat", json={
-    "query": "What documents are needed for that?",
-    "conversation_id": conv_id
-})
+```bash
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
 ```
 
-### Cross-Domain Query
-```python
-response = requests.post("http://localhost:8080/chat", json={
-    "query": "What are the legal and financial requirements for patient data storage?",
-    "routing_strategy": "keyword"
-})
-# Will query both legal and finance domains
+### 3. Install Dependencies
+
+```bash
+pip install -r requirements.txt
 ```
 
-## Supported File Formats
+### 4. Configure Environment
 
-- **PDF** (.pdf)
-- **Word** (.docx, .doc)
-- **Excel** (.xlsx, .xls)
-- **CSV** (.csv)
-- **HTML** (.html, .htm)
-- **Text** (.txt)
+Copy the example environment file and fill in your GCP details:
 
-## Configuration
+```bash
+cp .env.example .env
+```
 
-### Chunking Parameters
-- `chunk_size`: 800 tokens (configurable in config.yaml)
-- `chunk_overlap`: 200 tokens
-- `min_chunk_size`: 100 tokens
+Edit `.env` with your credentials:
 
-### LLM Parameters
-- Model: `gemini-1.5-pro`
-- Temperature: 0.2 (factual responses)
-- Max output tokens: 2048
+```env
+# Google Cloud Configuration
+GCP_PROJECT_ID=your-project-id
+GCP_LOCATION=us-central1
 
-### Routing Strategies
-- `keyword`: Route based on domain-specific keywords (default)
-- `all`: Query all domains
-- `llm`: Use LLM for intelligent routing (planned)
+# Vertex AI Search Datastore IDs
+NURSING_DATASTORE_ID=your-nursing-datastore-id
+HR_DATASTORE_ID=your-hr-datastore-id
+PHARMACY_DATASTORE_ID=your-pharmacy-datastore-id
 
-## Troubleshooting
+# Model Configuration
+MODEL_NAME=gemini-2.0-flash-exp
+TEMPERATURE=0.2
 
-### Authentication Errors
+# Search Configuration
+DYNAMIC_THRESHOLD=0.3
+MAX_RESULTS=5
+
+# System Settings
+LOG_LEVEL=INFO
+TIMEOUT=30
+ENVIRONMENT=development
+```
+
+### 5. Set Up Vertex AI Search Datastores
+
+For each domain (Nursing, HR, Pharmacy):
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Navigate to **Vertex AI Search**
+3. Create a new **Search App**
+4. Create a **Datastore** for unstructured documents
+5. Upload the documents from `docs/nursing/`, `docs/hr/`, or `docs/pharmacy/`
+6. Copy the **Datastore ID** to your `.env` file
+
+### 6. Authenticate with Google Cloud
+
 ```bash
 gcloud auth application-default login
 ```
 
-### Missing Dependencies
+## Usage
+
+### Running the Demo
+
+The demo script showcases the system with 12 test scenarios across all languages:
+
 ```bash
-pip install -r requirements.txt --upgrade
+python demo.py
 ```
 
-### Datastore Not Found
-Ensure datastores are created and IDs match configuration:
-```bash
-python scripts/setup_datastores.py --all
+This will:
+- Initialize the orchestrator and all agents
+- Run health checks
+- Execute demo scenarios covering:
+  - Nursing queries (EN/ES)
+  - HR queries (EN/FR)
+  - Pharmacy queries (EN/DE)
+  - Intelligent auto-routing
+- Save results to `outputs/demo_results_*.json`
+- Optionally enter interactive mode
+
+### Interactive Mode
+
+After the demo, you can enter interactive mode to ask custom questions:
+
+```python
+python demo.py
+# After demo completes, select 'y' for interactive mode
 ```
 
-## Security Considerations
+### Using the Orchestrator Programmatically
 
-- Enable authentication for production deployments
-- Use service accounts with minimal permissions
-- Store sensitive configuration in Secret Manager
-- Enable CORS only for trusted origins
-- Implement rate limiting
+```python
+from orchestrator import HospitalOrchestrator
 
-## Future Enhancements
+# Initialize orchestrator
+orchestrator = HospitalOrchestrator()
 
-- [ ] LLM-based query routing
-- [ ] Advanced multi-domain aggregation
-- [ ] User authentication and role-based access
-- [ ] Query history and analytics
-- [ ] Streaming responses
-- [ ] Document upload via API
-- [ ] Real-time indexing updates
+# Process a query with explicit role
+result = orchestrator.process_query(
+    query="How do I insert an IV line?",
+    user_role="nurse"
+)
+
+# Process a query with intelligent routing
+result = orchestrator.process_query(
+    query="How many vacation days do I have?"
+)
+
+# Access the response
+print(result['answer'])
+print(f"Routed to: {result['agent']}")
+print(f"Language: {result['language']}")
+```
+
+### Using Individual Agents
+
+```python
+from agents.nursing_agent import NursingAgent
+from agents.hr_agent import HRAgent
+from agents.pharmacy_agent import PharmacyAgent
+
+# Initialize specific agent
+nursing = NursingAgent(project_id="your-project-id")
+
+# Query the agent
+result = nursing.search_protocols("How do I insert an IV?")
+print(result['answer'])
+
+# Check citations
+if result['grounding_metadata']:
+    for citation in result['grounding_metadata']:
+        print(f"Source: {citation.get('title', 'N/A')}")
+```
+
+## API Reference
+
+### HospitalOrchestrator
+
+Main orchestrator class for routing queries.
+
+#### Methods
+
+- `process_query(query, user_role=None, agent_override=None)` - Process a user query
+- `multi_agent_query(query, agents=None)` - Query multiple agents simultaneously
+- `health_check()` - Check system health
+- `get_agent_info()` - Get information about available agents
+
+### Individual Agents
+
+All agents inherit from `BaseAgent` and provide domain-specific methods:
+
+#### NursingAgent
+
+- `search_protocols(query, temperature=0.2)` - Search nursing protocols
+- `get_procedure_steps(procedure_name, language="en")` - Get procedure steps
+- `check_safety_protocol(topic, language="en")` - Check safety protocols
+- `get_equipment_list(procedure_name, language="en")` - Get equipment lists
+
+#### HRAgent
+
+- `search_policies(query, temperature=0.2)` - Search HR policies
+- `get_leave_policy(leave_type="annual", language="en")` - Get leave policies
+- `get_public_holidays(year=2025, language="en")` - Get holiday information
+- `calculate_vacation_days(years_of_service, is_full_time, fte, language="en")` - Calculate vacation days
+
+#### PharmacyAgent
+
+- `search_inventory(query, temperature=0.2)` - Search medication inventory
+- `check_medication_availability(medication_name, strength, language="en")` - Check stock
+- `get_medication_info(medication_name, language="en")` - Get drug information
+- `check_controlled_substances(medication_name, language="en")` - Check controlled substances
+
+## Configuration
+
+### Environment Variables
+
+Key configuration options in `.env`:
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `GCP_PROJECT_ID` | Google Cloud Project ID | Required |
+| `NURSING_DATASTORE_ID` | Nursing documents datastore | Required |
+| `HR_DATASTORE_ID` | HR documents datastore | Required |
+| `PHARMACY_DATASTORE_ID` | Pharmacy documents datastore | Required |
+| `MODEL_NAME` | Gemini model to use | `gemini-2.0-flash-exp` |
+| `TEMPERATURE` | Model temperature | `0.2` |
+| `DYNAMIC_THRESHOLD` | Search threshold | `0.3` |
+| `LOG_LEVEL` | Logging level | `INFO` |
+
+### Routing Configuration
+
+The orchestrator uses two routing methods:
+
+1. **Keyword-based** (fast): Pattern matching on query text
+2. **Gemini-based** (accurate): AI classification of query intent
+
+Configuration in `utils/query_classifier.py`.
+
+## Example Queries
+
+### Nursing (English/Spanish)
+
+```
+EN: "How do I insert an IV line?"
+ES: "¿Cómo inserto una vía intravenosa?"
+
+EN: "What is the wound care protocol?"
+ES: "¿Cuál es el protocolo de curación de heridas?"
+
+EN: "What equipment do I need for wound dressing?"
+ES: "¿Qué equipo necesito para curar heridas?"
+```
+
+### HR (English/French)
+
+```
+EN: "How many vacation days do I have?"
+FR: "Combien de jours de vacances ai-je?"
+
+EN: "What are the public holidays for 2025?"
+FR: "Quels sont les jours fériés pour 2025?"
+
+EN: "How do I request time off?"
+FR: "Comment demander un congé?"
+```
+
+### Pharmacy (English/German)
+
+```
+EN: "Is ibuprofen 400mg in stock?"
+DE: "Ist Ibuprofen 400mg auf Lager?"
+
+EN: "Which antibiotics are available?"
+DE: "Welche Antibiotika sind verfügbar?"
+
+EN: "Do we have insulin in the pharmacy?"
+DE: "Haben wir Insulin in der Apotheke?"
+```
+
+## Performance
+
+Expected performance metrics:
+
+- **Response Time**: < 5 seconds per query
+- **Routing Accuracy**: > 90%
+- **Language Detection**: > 95%
+- **Document Grounding**: Citations included when relevant
+
+## Troubleshooting
+
+### Common Issues
+
+**Issue**: `Configuration validation failed: Missing required environment variables`
+
+**Solution**: Ensure all required variables in `.env` are set correctly
+
+---
+
+**Issue**: `Failed to initialize Vertex Search client`
+
+**Solution**:
+1. Verify GCP authentication: `gcloud auth application-default login`
+2. Check that Vertex AI API is enabled
+3. Verify service account has correct permissions
+
+---
+
+**Issue**: No grounding metadata returned
+
+**Solution**:
+1. Verify documents are uploaded to Vertex AI Search datastores
+2. Check datastore IDs in `.env` are correct
+3. Ensure documents contain relevant information for queries
+
+---
+
+**Issue**: Wrong agent routing
+
+**Solution**:
+1. Check query keywords match expected patterns
+2. Review `utils/query_classifier.py` keyword lists
+3. Use `user_role` parameter for explicit routing
+
+## Development
+
+### Adding New Documents
+
+1. Create markdown file in appropriate `docs/` subdirectory
+2. Upload to corresponding Vertex AI Search datastore
+3. Test queries against new documents
+
+### Extending Agents
+
+To add new functionality to an agent:
+
+1. Add method to agent class (e.g., `agents/nursing_agent.py`)
+2. Update prompts if needed (`agents/prompts/nursing_prompts.py`)
+3. Add test scenarios to `demo.py`
+
+### Adding New Languages
+
+1. Add language detection keywords to `utils/vertex_search.py:detect_language()`
+2. Add language-specific instructions to agent prompts
+3. Create translated documents in `docs/`
+4. Update demo scenarios with new language examples
+
+## Testing
+
+Basic test structure is provided in `tests/` directory. To add comprehensive tests:
+
+```bash
+# Install test dependencies
+pip install pytest pytest-asyncio pytest-cov
+
+# Run tests (to be implemented)
+pytest tests/
+```
 
 ## License
 
-This project is created for hackathon purposes.
+MIT License - See LICENSE file for details
+
+## Contributing
+
+Contributions are welcome! Please:
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests
+5. Submit a pull request
+
+## Acknowledgments
+
+- Built with [Google ADK](https://ai.google.dev/)
+- Powered by [Vertex AI Search](https://cloud.google.com/generative-ai-app-builder/docs)
+- Uses [Gemini 2.0 Flash](https://deepmind.google/technologies/gemini/)
 
 ## Support
 
-For issues and questions, please refer to the project documentation or create an issue in the repository.
+For issues and questions:
+- Open an issue on GitHub
+- Review the troubleshooting section
+- Check Google ADK documentation
+
+## Roadmap
+
+Future enhancements:
+
+- [ ] Comprehensive test suite with pytest
+- [ ] Streamlit web UI
+- [ ] Additional languages (Italian, Portuguese)
+- [ ] Multi-agent consultation mode
+- [ ] Real-time inventory integration
+- [ ] User authentication and personalization
+- [ ] Analytics dashboard
+- [ ] PDF document support
+- [ ] Voice input support
+
+---
+
+**Built for the hackathon** | **January 2025** | **Powered by Google ADK**
