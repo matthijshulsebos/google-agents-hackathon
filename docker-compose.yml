@@ -1,0 +1,32 @@
+version: "3.9"
+
+services:
+  hospital-chat:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: hospital-chat
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    # Uncomment ONE of the credential mounting options below for local auth
+    # Option A: Mount a service account key JSON
+    # IMPORTANT: The left-hand side must be a FILE path to the JSON key, not a directory.
+    # If you accidentally mount a directory to /tmp/key.json, it will be a directory inside the container
+    # and cause errors like: [Errno 21] Is a directory: '/tmp/key.json'.
+    volumes:
+      - ./sa-key.json:/tmp/key.json:ro
+    environment:
+      - GOOGLE_APPLICATION_CREDENTIALS=/tmp/key.json
+
+    # Option B: Use host gcloud credentials (if you have gcloud installed and logged in)
+    # volumes:
+    #   - ${HOME}/.config/gcloud:/root/.config/gcloud:ro
+
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/healthz || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5

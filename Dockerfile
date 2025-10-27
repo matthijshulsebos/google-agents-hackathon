@@ -1,30 +1,27 @@
-# Use Python 3.11 slim image
+# Python base
 FROM python:3.11-slim
 
-# Set working directory
-WORKDIR /app
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    gcc \
-    g++ \
+# Install system deps for pdfplumber and others
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    poppler-utils \
+    libxml2 \
+    libxslt1.1 \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements first for better caching
-COPY requirements.txt .
-
-# Install Python dependencies
+WORKDIR /app
+COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
-COPY . .
+COPY app ./app
 
-# Expose port
+# Expose service port for local runs and clarity
 EXPOSE 8080
 
-# Set environment variables
-ENV PYTHONUNBUFFERED=1
+# Uvicorn entry
 ENV PORT=8080
-
-# Run the application
-CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8080"]
+CMD ["uvicorn", "app.web:app", "--host", "0.0.0.0", "--port", "8080"]

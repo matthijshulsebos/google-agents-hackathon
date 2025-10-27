@@ -1,60 +1,63 @@
-# Python
+# Git ignore for hospital multi-domain chat project
+
+# Environment variables and secrets
+.env
+.env.*
+*.env
+!.env.example
+*.secret
+*.pem
+*.key
+sa-key.json
+.gcloud/
+
+# Python artifacts
 __pycache__/
 *.py[cod]
 *$py.class
-*.so
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-
-# Virtual Environment
+.python-version
+.venv/
 venv/
-env/
-ENV/
-.venv
+pip-wheel-metadata/
+*.egg-info/
+.eggs/
+dist/
+build/
 
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-
-# Environment Variables
-.env
-*.env
-!.env.example
-
-# Google Cloud
-*.json
-!config.yaml
-
-# Logs
-*.log
-
-# Testing
+# Test and coverage
 .pytest_cache/
 .coverage
+.coverage.*
 htmlcov/
-.tox/
+coverage.xml
 
-# macOS
+# Type checker / linters caches
+.mypy_cache/
+.ruff_cache/
+.pyre/
+.pytype/
+
+# Editors/IDE
+.vscode/
+.idea/
+*.iml
+
+# OS files
 .DS_Store
+Thumbs.db
 
-# Temporary files
+# Logs and temp
+*.log
+logs/
+.tmp/
 tmp/
-temp/
-*.tmp
+.cache/
+
+# Notebooks
+.ipynb_checkpoints/
+
+# Node (if present for UI tooling)
+node_modules/
+
+# Docker / Compose overrides
+docker-compose.override.yml
