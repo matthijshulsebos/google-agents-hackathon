@@ -1,0 +1,49 @@
+# Hospital Chat System Configuration
+
+# Google Cloud Project Settings
+gcp:
+  project_id: "your-project-id"
+  location: "us-central1"
+  
+# GCS Bucket Configuration
+buckets:
+  finance: "finance-bucket"
+  legal: "legal-bucket"
+  healthcare: "healthcare-bucket"
+
+# Vertex AI Search Configuration
+vertex_search:
+  finance:
+    datastore_id: "finance-datastore"
+    serving_config_id: "default_config"
+  legal:
+    datastore_id: "legal-datastore"
+    serving_config_id: "default_config"
+  healthcare:
+    datastore_id: "healthcare-datastore"
+    serving_config_id: "default_config"
+
+# LLM Configuration
+llm:
+  model: "gemini-1.5-pro"
+  temperature: 0.2
+  max_output_tokens: 2048
+  top_k: 40
+  top_p: 0.95
+
+# Document Processing
+chunking:
+  chunk_size: 800
+  chunk_overlap: 200
+  min_chunk_size: 100
+
+# Retrieval Settings
+retrieval:
+  top_k: 5
+  similarity_threshold: 0.7
+
+# Web API Settings
+api:
+  host: "0.0.0.0"
+  port: 8080
+  max_conversation_history: 10
