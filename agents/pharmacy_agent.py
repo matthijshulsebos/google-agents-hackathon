@@ -1,7 +1,7 @@
 """
 Pharmacy Agent - Specialized agent for medication inventory and pharmaceutical information
 """
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 import logging
 from utils.rag_pipeline import RAGPipeline
 from agents.prompts.pharmacy_prompts import (
@@ -65,7 +65,8 @@ class PharmacyAgent:
     def search_inventory(
         self,
         query: str,
-        temperature: float = 0.2
+        temperature: float = 0.2,
+        conversation_history: Optional[List[Dict[str, str]]] = None
     ) -> Dict[str, Any]:
         """
         Search medication inventory and pharmaceutical information using RAG
@@ -73,6 +74,7 @@ class PharmacyAgent:
         Args:
             query: User's question about medications or inventory
             temperature: Model temperature (lower = more focused)
+            conversation_history: Optional conversation history for context
 
         Returns:
             Dict with answer, search results, and metadata
@@ -93,7 +95,8 @@ class PharmacyAgent:
                 query=query,
                 system_instruction=system_instruction,
                 temperature=temperature,
-                max_search_results=5
+                max_search_results=5,
+                conversation_history=conversation_history
             )
 
             # Add metadata

@@ -1,7 +1,7 @@
 """
 HR Agent - Specialized agent for HR policies, benefits, and employee questions
 """
-from typing import Dict, Any
+from typing import Dict, Any, List, Optional
 import logging
 from utils.rag_pipeline import RAGPipeline
 from agents.prompts.hr_prompts import (
@@ -65,7 +65,8 @@ class HRAgent:
     def search_policies(
         self,
         query: str,
-        temperature: float = 0.2
+        temperature: float = 0.2,
+        conversation_history: Optional[List[Dict[str, str]]] = None
     ) -> Dict[str, Any]:
         """
         Search HR policies and procedures using RAG
@@ -73,6 +74,7 @@ class HRAgent:
         Args:
             query: User's question about HR policies
             temperature: Model temperature (lower = more focused)
+            conversation_history: Optional conversation history for context
 
         Returns:
             Dict with answer, search results, and metadata
@@ -92,7 +94,8 @@ class HRAgent:
                 query=query,
                 system_instruction=system_instruction,
                 temperature=temperature,
-                max_search_results=5
+                max_search_results=5,
+                conversation_history=conversation_history
             )
 
             # Add metadata

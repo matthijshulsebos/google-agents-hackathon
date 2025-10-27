@@ -1,7 +1,7 @@
 """
 Nursing Agent - Specialized agent for nursing procedures and protocols
 """
-from typing import Dict, Any
+from typing import Dict, Any, List, Optional
 import logging
 from utils.rag_pipeline import RAGPipeline
 from agents.prompts.nursing_prompts import (
@@ -64,7 +64,8 @@ class NursingAgent:
     def search_protocols(
         self,
         query: str,
-        temperature: float = 0.2
+        temperature: float = 0.2,
+        conversation_history: Optional[List[Dict[str, str]]] = None
     ) -> Dict[str, Any]:
         """
         Search nursing protocols and procedures using RAG
@@ -72,6 +73,7 @@ class NursingAgent:
         Args:
             query: User's question about nursing procedures
             temperature: Model temperature (lower = more focused)
+            conversation_history: Optional conversation history for context
 
         Returns:
             Dict with answer, search results, and metadata
@@ -91,7 +93,8 @@ class NursingAgent:
                 query=query,
                 system_instruction=system_instruction,
                 temperature=temperature,
-                max_search_results=5
+                max_search_results=5,
+                conversation_history=conversation_history
             )
 
             # Add metadata

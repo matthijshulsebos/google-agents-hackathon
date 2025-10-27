@@ -92,7 +92,8 @@ class HospitalOrchestrator:
         self,
         query: str,
         user_role: Optional[str] = None,
-        agent_override: Optional[str] = None
+        agent_override: Optional[str] = None,
+        conversation_history: Optional[List[Dict[str, str]]] = None
     ) -> Dict[str, Any]:
         """
         Process a user query and route to appropriate agent
@@ -101,6 +102,8 @@ class HospitalOrchestrator:
             query: User's question
             user_role: Optional user role (nurse, employee, pharmacist)
             agent_override: Optional agent to use directly (nursing, hr, pharmacy)
+            conversation_history: Optional conversation history for context
+                Format: [{"role": "user", "content": "..."}, {"role": "assistant", "content": "..."}]
 
         Returns:
             Dict with:
@@ -151,11 +154,11 @@ class HospitalOrchestrator:
 
             # Route to agent based on category
             if agent_category == "nursing":
-                result = agent.search_protocols(query)
+                result = agent.search_protocols(query, conversation_history=conversation_history)
             elif agent_category == "hr":
-                result = agent.search_policies(query)
+                result = agent.search_policies(query, conversation_history=conversation_history)
             elif agent_category == "pharmacy":
-                result = agent.search_inventory(query)
+                result = agent.search_inventory(query, conversation_history=conversation_history)
             else:
                 result = {
                     "error": True,

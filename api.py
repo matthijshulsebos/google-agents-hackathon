@@ -220,11 +220,28 @@ async def process_query(request: QueryRequest):
 
         logger.info(f"[{conversation_id}] Processing query: {request.query[:50]}...")
 
-        # Process query through orchestrator
+        # Get conversation history and format for RAG pipeline
+        formatted_history = None
+        if conversation_id in conversation_history and len(conversation_history[conversation_id]) > 0:
+            # Get last N turns from config
+            from config import config
+            max_turns = config.MAX_CONVERSATION_TURNS
+
+            # Convert to format expected by RAG pipeline
+            recent_history = conversation_history[conversation_id][-max_turns:]
+            formatted_history = []
+            for turn in recent_history:
+                formatted_history.append({"role": "user", "content": turn["query"]})
+                formatted_history.append({"role": "assistant", "content": turn["answer"]})
+
+            logger.info(f"Including {len(recent_history)} previous turn(s) in context")
+
+        # Process query through orchestrator with conversation history
         result = orchestrator.process_query(
             query=request.query,
             user_role=request.user_role,
-            agent_override=request.agent_override
+            agent_override=request.agent_override,
+            conversation_history=formatted_history
         )
 
         # Check for errors

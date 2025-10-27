@@ -62,7 +62,8 @@ class RAGPipeline:
         query: str,
         system_instruction: str,
         temperature: float = 0.2,
-        max_search_results: int = 5
+        max_search_results: int = 5,
+        conversation_history: Optional[List[Dict[str, str]]] = None
     ) -> Dict[str, Any]:
         """
         Generate response using RAG approach
@@ -72,6 +73,8 @@ class RAGPipeline:
             system_instruction: System instruction for Gemini
             temperature: Model temperature
             max_search_results: Maximum number of search results to use as context
+            conversation_history: Optional list of previous conversation turns
+                Format: [{"role": "user", "content": "..."}, {"role": "assistant", "content": "..."}]
 
         Returns:
             Dictionary with answer and metadata
@@ -103,7 +106,8 @@ class RAGPipeline:
                 query=query,
                 context=context,
                 system_instruction=system_instruction,
-                temperature=temperature
+                temperature=temperature,
+                conversation_history=conversation_history
             )
 
             # Step 4: Return response with metadata
@@ -122,6 +126,34 @@ class RAGPipeline:
                 "message": str(e),
                 "answer": None
             }
+
+    def _format_conversation_history(self, conversation_history: List[Dict[str, str]]) -> str:
+        """
+        Format conversation history for inclusion in system instruction
+
+        Args:
+            conversation_history: List of conversation turns
+
+        Returns:
+            Formatted conversation history string
+        """
+        if not conversation_history:
+            return ""
+
+        history_parts = ["Previous Conversation:\n"]
+
+        for turn in conversation_history:
+            role = turn.get("role", "")
+            content = turn.get("content", "")
+
+            if role == "user":
+                history_parts.append(f"User: {content}")
+            elif role == "assistant":
+                history_parts.append(f"Assistant: {content}")
+
+        history_parts.append("\nCurrent Question:\n")
+
+        return "\n".join(history_parts)
 
     def _format_search_context(self, search_results: Dict[str, Any]) -> str:
         """
@@ -159,7 +191,8 @@ class RAGPipeline:
         query: str,
         context: str,
         system_instruction: str,
-        temperature: float
+        temperature: float,
+        conversation_history: Optional[List[Dict[str, str]]] = None
     ) -> str:
         """
         Generate response using Gemini with retrieved context
@@ -169,12 +202,18 @@ class RAGPipeline:
             context: Retrieved context from search
             system_instruction: System instruction
             temperature: Model temperature
+            conversation_history: Optional conversation history
 
         Returns:
             Generated answer
         """
-        # Combine system instruction with context
+        # Format conversation history if provided
+        conversation_context = self._format_conversation_history(conversation_history) if conversation_history else ""
+
+        # Combine system instruction with conversation history and retrieved context
         enhanced_instruction = f"""{system_instruction}
+
+{conversation_context}
 
 Use the following retrieved information to answer the user's question. If the information is not in the retrieved documents, clearly state that.
 

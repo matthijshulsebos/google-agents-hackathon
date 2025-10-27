@@ -33,6 +33,10 @@ class Config:
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
     TIMEOUT: int = int(os.getenv("TIMEOUT", "30"))
 
+    # Conversation Settings
+    CONVERSATION_ENABLED: bool = os.getenv("CONVERSATION_ENABLED", "true").lower() == "true"
+    MAX_CONVERSATION_TURNS: int = int(os.getenv("MAX_CONVERSATION_TURNS", "3"))
+
     # Environment
     ENVIRONMENT: str = os.getenv("ENVIRONMENT", "development")
 
