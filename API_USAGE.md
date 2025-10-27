@@ -4,6 +4,14 @@
 
 The HTTP API provides RESTful access to the hospital multi-agent system with RAG (Retrieval Augmented Generation) capabilities.
 
+## Key Features
+
+✨ **Dual Response Format**: Every query returns both a concise summary (2-3 sentences) and a full detailed answer
+🤖 **Perfect for Chatbots**: Display the summary immediately, offer "show more" for detailed version
+🌐 **Multilingual**: Automatic language detection (EN, ES, FR, DE)
+💬 **Conversation Context**: Follow-up questions work naturally
+📚 **Document Grounding**: All answers cite source documents
+
 ## Quick Start
 
 ### 1. Start the API Server
@@ -190,6 +198,8 @@ curl -X POST http://localhost:8000/query \
   "conversation_id": "550e8400-e29b-41d4-a716-446655440000",
   "query": "What about blood glucose monitoring?",
   "answer": "Blood glucose monitoring is a critical procedure...\n\nEquipment Needed:\n1. Glucometer...",
+  "answer_summary": "Blood glucose monitoring measures current blood sugar levels using a glucometer, test strip, and lancet. The procedure emphasizes hand hygiene, sterile equipment, proper sharps disposal, and documentation for patient safety.",
+  "answer_detailed": "Here is information regarding blood glucose monitoring:\n\n**Overview**\nBlood glucose monitoring is a procedure used to measure the current blood glucose level...\n\n**Equipment Needed**\n* Glucometer\n* Test strip\n* Lancet\n* Gauze\n\n**Procedure Steps**\n1. Verify the order...\n2. Gather equipment...\n[Full detailed answer with all steps]",
   "agent": "nursing",
   "language": "en",
   "total_results": 34,
@@ -209,6 +219,11 @@ curl -X POST http://localhost:8000/query \
   "timestamp": "2025-10-27T10:30:00.000Z"
 }
 ```
+
+**Response Fields:**
+- `answer` - Full detailed answer (backward compatibility)
+- `answer_summary` - **Concise 2-3 sentence summary** (for chatbot quick display)
+- `answer_detailed` - Full detailed answer with all information (for "show more" functionality)
 
 #### Example 2: HR Query (French)
 
@@ -410,9 +425,14 @@ result = query_hospital_system(
     user_role="nurse"
 )
 
-print(f"Answer: {result['answer']}")
+# Display summary for quick view
+print(f"Summary: {result['answer_summary']}")
 print(f"Agent: {result['agent']}")
 print(f"Sources: {result['sources_count']}")
+
+# User can request detailed view
+if user_wants_details:
+    print(f"\nDetailed Answer:\n{result['answer_detailed']}")
 ```
 
 ## JavaScript/TypeScript Client Example
@@ -562,6 +582,81 @@ The API uses:
     │ Gemini 2.5 Flash    │
     └─────────────────────┘
 ```
+
+## Chatbot Integration Example
+
+The dual response format is perfect for chatbot UIs:
+
+### React Chatbot Component
+
+```jsx
+function ChatMessage({ message }) {
+  const [showDetails, setShowDetails] = useState(false);
+
+  return (
+    <div className="chat-message">
+      {/* Always show summary first */}
+      <p className="summary">{message.answer_summary}</p>
+
+      {/* Show more button */}
+      {!showDetails && (
+        <button onClick={() => setShowDetails(true)}>
+          Show detailed answer
+        </button>
+      )}
+
+      {/* Detailed view (on demand) */}
+      {showDetails && (
+        <div className="detailed-answer">
+          <p>{message.answer_detailed}</p>
+          <div className="sources">
+            <small>{message.sources_count} sources cited</small>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+```
+
+### Vue.js Example
+
+```vue
+<template>
+  <div class="chat-message">
+    <!-- Summary (always visible) -->
+    <p class="summary">{{ message.answer_summary }}</p>
+
+    <!-- Toggle button -->
+    <button v-if="!showDetails" @click="showDetails = true">
+      Show more
+    </button>
+
+    <!-- Detailed answer (expandable) -->
+    <div v-if="showDetails" class="details">
+      <p>{{ message.answer_detailed }}</p>
+      <small>{{ message.sources_count }} sources</small>
+    </div>
+  </div>
+</template>
+
+<script>
+export default {
+  props: ['message'],
+  data() {
+    return { showDetails: false };
+  }
+};
+</script>
+```
+
+### Benefits for Chatbots
+
+✅ **Fast Initial Response**: Show summary immediately
+✅ **Clean UI**: No overwhelming walls of text
+✅ **User Control**: Let users decide if they want details
+✅ **Better UX**: Progressive disclosure pattern
+✅ **Mobile Friendly**: Concise summaries work better on small screens
 
 ## Support
 

@@ -103,9 +103,9 @@ class RAGPipeline:
             # Step 2: Format search results as context
             context = self._format_search_context(search_results)
 
-            # Step 3: Generate response with Gemini using retrieved context
-            logger.info(f"Generating response with {len(search_results.get('results', []))} search results...")
-            answer = self._generate_with_gemini(
+            # Step 3: Generate detailed response with Gemini using retrieved context
+            logger.info(f"Generating detailed response with {len(search_results.get('results', []))} search results...")
+            detailed_answer = self._generate_with_gemini(
                 query=query,
                 context=context,
                 system_instruction=system_instruction,
@@ -113,9 +113,19 @@ class RAGPipeline:
                 conversation_history=conversation_history
             )
 
-            # Step 4: Return response with metadata
+            # Step 4: Generate summary version of the response
+            logger.info(f"Generating summary version...")
+            summary = self._generate_summary(
+                query=query,
+                detailed_answer=detailed_answer,
+                temperature=temperature
+            )
+
+            # Step 5: Return response with metadata
             return {
-                "answer": answer,
+                "answer": detailed_answer,  # Keep for backward compatibility
+                "answer_detailed": detailed_answer,
+                "answer_summary": summary,
                 "search_results": search_results.get('results', []),
                 "total_results": search_results.get('total_size', 0),
                 "query": query,
@@ -232,6 +242,50 @@ class RAGPipeline:
                     context_parts.append(f"{key}: {value_str}")
 
         return "\n".join(context_parts)
+
+    def _generate_summary(
+        self,
+        query: str,
+        detailed_answer: str,
+        temperature: float
+    ) -> str:
+        """
+        Generate a concise summary of the detailed answer
+
+        Args:
+            query: User's original query
+            detailed_answer: The full detailed response
+            temperature: Model temperature
+
+        Returns:
+            Concise summary (2-3 sentences)
+        """
+        summary_prompt = f"""Provide a concise 2-3 sentence summary of the following answer to the question: "{query}"
+
+Answer to summarize:
+{detailed_answer}
+
+Requirements:
+- Keep it to 2-3 sentences maximum
+- Include the most important information
+- Be direct and clear
+- Don't use phrases like "The answer states..." - just provide the summary directly"""
+
+        try:
+            response = self.gemini_client.models.generate_content(
+                model=self.model_name,
+                contents=summary_prompt,
+                config=types.GenerateContentConfig(
+                    temperature=temperature
+                )
+            )
+            summary = response.text if hasattr(response, 'text') else str(response)
+            return summary.strip()
+        except Exception as e:
+            logger.error(f"Error generating summary: {str(e)}")
+            # Fallback: return first 2 sentences of detailed answer
+            sentences = detailed_answer.split('. ')
+            return '. '.join(sentences[:2]) + '.' if len(sentences) >= 2 else detailed_answer[:200] + '...'
 
     def _generate_with_gemini(
         self,

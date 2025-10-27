@@ -55,7 +55,9 @@ class QueryResponse(BaseModel):
     """Query response model."""
     conversation_id: str = Field(..., description="Conversation ID")
     query: str = Field(..., description="Original query")
-    answer: str = Field(..., description="Generated answer")
+    answer: str = Field(..., description="Generated answer (full detailed version)")
+    answer_summary: str = Field(..., description="Concise 2-3 sentence summary")
+    answer_detailed: str = Field(..., description="Full detailed answer with all information")
     agent: str = Field(..., description="Agent that handled the query")
     language: str = Field(..., description="Detected language")
     total_results: int = Field(..., description="Number of search results found")
@@ -262,11 +264,13 @@ async def process_query(request: QueryRequest):
             "agent": result["agent"]
         })
 
-        # Build response
+        # Build response with both summary and detailed versions
         return QueryResponse(
             conversation_id=conversation_id,
             query=request.query,
-            answer=result["answer"],
+            answer=result["answer"],  # Full version (backward compatibility)
+            answer_summary=result.get("answer_summary", result["answer"][:200] + "..."),
+            answer_detailed=result.get("answer_detailed", result["answer"]),
             agent=result["agent"],
             language=result.get("language", "unknown"),
             total_results=result.get("total_results", 0),
