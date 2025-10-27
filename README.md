@@ -189,7 +189,38 @@ gcloud auth application-default login
 
 ## Usage
 
-### Running the Demo
+### Option 1: HTTP API (Recommended)
+
+Start the HTTP API server for easy integration:
+
+```bash
+export GOOGLE_APPLICATION_CREDENTIALS=./sakey.json
+python3 api.py
+```
+
+The API will start at `http://localhost:8000`
+
+- **Interactive Docs**: http://localhost:8000/docs
+- **API Documentation**: See [API_USAGE.md](API_USAGE.md)
+
+#### Quick API Examples
+
+```bash
+# Health check
+curl http://localhost:8000/health
+
+# Query the system
+curl -X POST http://localhost:8000/query \
+  -H "Content-Type: application/json" \
+  -d '{"query": "What about blood glucose monitoring?", "user_role": "nurse"}'
+
+# Get agent information
+curl http://localhost:8000/agents
+```
+
+See [API_USAGE.md](API_USAGE.md) for complete API documentation, examples, and client code.
+
+### Option 2: Running the Demo
 
 The demo script showcases the system with 12 test scenarios across all languages:
 
@@ -477,6 +508,9 @@ For issues and questions:
 
 Future enhancements:
 
+- [x] **HTTP REST API** with FastAPI
+- [x] **RAG Pipeline** with Vertex AI Search + Gemini
+- [x] **Interactive API Documentation** (Swagger/ReDoc)
 - [ ] Comprehensive test suite with pytest
 - [ ] Streamlit web UI
 - [ ] Additional languages (Italian, Portuguese)
