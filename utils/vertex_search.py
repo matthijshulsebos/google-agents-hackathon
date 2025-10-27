@@ -25,7 +25,8 @@ class VertexSearchClient:
         self,
         project_id: str,
         location: str = "us-central1",
-        model_name: str = None
+        model_name: str = None,
+        datastore_id: str = None
     ):
         """
         Initialize Vertex AI Search client
@@ -34,10 +35,28 @@ class VertexSearchClient:
             project_id: Google Cloud Project ID
             location: GCP location (default: us-central1)
             model_name: Gemini model to use (default: from config)
+            datastore_id: Vertex AI Search datastore ID for grounding
         """
         self.project_id = project_id
         self.location = location
         self.model_name = model_name or config.MODEL_NAME
+        self.datastore_id = datastore_id
+
+        # Get project number for Vertex AI Search (it requires number, not ID)
+        self.project_number = None
+        try:
+            import subprocess
+            result = subprocess.run(
+                ['gcloud', 'projects', 'describe', project_id, '--format=value(projectNumber)'],
+                capture_output=True,
+                text=True,
+                timeout=10
+            )
+            if result.returncode == 0:
+                self.project_number = result.stdout.strip()
+                logger.info(f"Retrieved project number: {self.project_number}")
+        except Exception as e:
+            logger.warning(f"Could not get project number: {e}. Will use project ID instead.")
 
         try:
             # Initialize Google ADK client with Vertex AI
@@ -53,30 +72,58 @@ class VertexSearchClient:
 
     def create_search_tool(
         self,
+        datastore_id: str = None,
         dynamic_threshold: float = None
     ) -> types.Tool:
         """
-        Create Google Search tool with dynamic retrieval configuration
+        Create Vertex AI Search tool with datastore configuration
 
         Args:
+            datastore_id: Vertex AI Search datastore ID (required for proper grounding)
             dynamic_threshold: Threshold for dynamic retrieval (default: from config)
 
         Returns:
-            types.Tool: Configured Google Search tool
+            types.Tool: Configured Vertex AI Search tool
         """
         threshold = dynamic_threshold or config.DYNAMIC_THRESHOLD
 
-        google_search_tool = types.Tool(
-            google_search=types.GoogleSearch(
-                dynamic_retrieval_config=types.DynamicRetrievalConfig(
-                    mode=types.DynamicRetrievalConfigMode.MODE_DYNAMIC,
-                    dynamic_threshold=threshold
+        if datastore_id:
+            # Format datastore as full resource name
+            # Format: projects/PROJECT_NUMBER/locations/LOCATION/collections/COLLECTION/dataStores/DATASTORE_ID
+            # Note: Vertex AI Search datastores are typically in 'global' location
+            # IMPORTANT: Must use project NUMBER not project ID
+            # IMPORTANT: Must use 'dataStores' not 'engines' for the VertexAISearch tool
+            if not datastore_id.startswith('projects/'):
+                datastore_location = 'global'  # Vertex AI Search uses global location
+                project_identifier = self.project_number or self.project_id
+                # Use dataStores path as required by VertexAISearch
+                datastore_resource = f"projects/{project_identifier}/locations/{datastore_location}/collections/default_collection/dataStores/{datastore_id}"
+            else:
+                datastore_resource = datastore_id
+
+            # Use Vertex AI Search with specific datastore for grounding
+            search_tool = types.Tool(
+                retrieval=types.Retrieval(
+                    disable_attribution=False,
+                    vertex_ai_search=types.VertexAISearch(
+                        datastore=datastore_resource
+                    )
                 )
             )
-        )
+            logger.info(f"Created Vertex AI Search tool with datastore: {datastore_resource}")
+        else:
+            # Fallback to Google Search Retrieval with dynamic config
+            search_tool = types.Tool(
+                google_search_retrieval=types.GoogleSearchRetrieval(
+                    dynamic_retrieval_config=types.DynamicRetrievalConfig(
+                        mode='MODE_DYNAMIC',
+                        dynamicThreshold=threshold
+                    )
+                )
+            )
+            logger.debug(f"Created Google Search Retrieval tool")
 
-        logger.debug(f"Created search tool with threshold: {threshold}")
-        return google_search_tool
+        return search_tool
 
     def generate_with_search(
         self,
@@ -101,8 +148,11 @@ class VertexSearchClient:
                 - search_queries: Queries used for retrieval
         """
         try:
-            # Create search tool
-            search_tool = self.create_search_tool(dynamic_threshold)
+            # Create search tool with datastore configuration
+            search_tool = self.create_search_tool(
+                datastore_id=self.datastore_id,
+                dynamic_threshold=dynamic_threshold
+            )
 
             # Set temperature
             temp = temperature or config.TEMPERATURE
@@ -302,13 +352,14 @@ class BaseAgent:
         self.datastore_id = datastore_id or config.get_datastore_id(self.agent_type)
         self.location = location
 
-        # Initialize Vertex Search client
+        # Initialize Vertex Search client with datastore
         self.search_client = VertexSearchClient(
             project_id=self.project_id,
-            location=self.location
+            location=self.location,
+            datastore_id=self.datastore_id
         )
 
-        logger.info(f"Initialized {self.agent_type} agent")
+        logger.info(f"Initialized {self.agent_type} agent with datastore: {self.datastore_id}")
 
     def query(
         self,
