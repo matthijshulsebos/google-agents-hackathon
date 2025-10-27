@@ -241,8 +241,20 @@ class HospitalOrchestrator:
         # Check each agent
         for agent_name, agent in self.agents.items():
             try:
-                agent_health = agent.search_client.health_check()
-                health_status["agents"][agent_name] = agent_health
+                # Check if agent has RAG pipeline initialized
+                if hasattr(agent, 'rag') and agent.rag:
+                    health_status["agents"][agent_name] = {
+                        "healthy": True,
+                        "agent_type": agent.agent_type,
+                        "search_engine": agent.datastore_id,
+                        "implementation": "RAG Pipeline"
+                    }
+                else:
+                    # Legacy agents or not properly initialized
+                    health_status["agents"][agent_name] = {
+                        "healthy": False,
+                        "error": "Agent not properly initialized (missing RAG pipeline)"
+                    }
             except Exception as e:
                 logger.error(f"Health check failed for {agent_name}: {str(e)}")
                 health_status["agents"][agent_name] = {
