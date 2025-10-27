@@ -40,7 +40,6 @@ ENV/
 
 # Google Cloud
 *.json
-!config.yaml
 
 # Logs
 *.log
