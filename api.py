@@ -5,7 +5,7 @@ Uses the current orchestrator.py and RAG pipeline
 """
 import logging
 import uuid
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 from datetime import datetime
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -39,6 +39,7 @@ app.add_middleware(
 
 # Global state
 orchestrator: Optional[HospitalOrchestrator] = None
+research_agent = None  # Research agent instance
 conversation_history: Dict[str, list] = {}  # Simple in-memory conversation storage
 
 
@@ -97,10 +98,26 @@ class AgentInfoResponse(BaseModel):
     agents: Dict[str, Any]
 
 
+class ResearchRequest(BaseModel):
+    """Research request model."""
+    query: str = Field(..., description="Research query", min_length=1)
+
+
+class ResearchResponse(BaseModel):
+    """Research response model."""
+    query: str = Field(..., description="Original query")
+    answer: str = Field(..., description="Research answer")
+    agent: str = Field(..., description="Agent type (research)")
+    iterations: int = Field(..., description="Number of reasoning iterations")
+    tool_calls: int = Field(..., description="Number of tool calls made")
+    tool_call_history: List[Dict[str, Any]] = Field(..., description="History of tool calls")
+    timestamp: str = Field(..., description="Response timestamp")
+
+
 @app.on_event("startup")
 async def startup_event():
     """Initialize services on startup."""
-    global orchestrator
+    global orchestrator, research_agent
 
     logger.info("Starting Hospital Multi-Agent RAG System...")
 
@@ -108,6 +125,17 @@ async def startup_event():
         # Initialize orchestrator
         logger.info("Initializing HospitalOrchestrator...")
         orchestrator = HospitalOrchestrator()
+
+        # Initialize research agent
+        logger.info("Initializing ResearchAgent...")
+        from agents.research_agent import ResearchAgent
+        from config import config
+        research_agent = ResearchAgent(
+            project_id=config.PROJECT_ID,
+            nursing_agent=orchestrator.nursing_agent,
+            pharmacy_agent=orchestrator.pharmacy_agent,
+            location=config.LOCATION
+        )
 
         logger.info("Hospital Multi-Agent RAG System started successfully!")
 
@@ -119,6 +147,8 @@ async def startup_event():
                 logger.info(f"  ✓ {agent_name} agent: {agent_status.get('implementation', 'ready')}")
             else:
                 logger.warning(f"  ✗ {agent_name} agent: {agent_status.get('error', 'not healthy')}")
+
+        logger.info("  ✓ research agent: initialized with tool-based reasoning")
 
     except Exception as e:
         logger.error(f"Error during startup: {e}")
@@ -134,6 +164,7 @@ async def root():
         "description": "AI-powered hospital information retrieval",
         "endpoints": {
             "query": "POST /query - Query the hospital system",
+            "research": "POST /research - Agentic research with tool calling",
             "multi_agent": "POST /multi-agent - Query multiple agents",
             "health": "GET /health - System health check",
             "agents": "GET /agents - List available agents",
@@ -284,6 +315,70 @@ async def process_query(request: QueryRequest):
         raise
     except Exception as e:
         logger.error(f"Error processing query: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/research", response_model=ResearchResponse)
+async def research_query(request: ResearchRequest):
+    """
+    Research endpoint using agentic loop with tool calling.
+
+    This endpoint uses a ReAct-style agent that iteratively:
+    1. Reasons about what information is needed
+    2. Calls tools to gather information (patient data, nursing protocols, pharmacy info)
+    3. Observes results and determines next steps
+    4. Synthesizes findings into a comprehensive answer
+
+    Perfect for complex multi-step queries that require cross-referencing
+    multiple data sources and applying business logic.
+
+    Example use case:
+    "What do I need to do today with patient Juan de Marco?"
+
+    The agent will:
+    - Get patient details (age, scheduled medications)
+    - Check relevant nursing protocols
+    - Verify pharmacy inventory and audit compliance
+    - Provide actionable recommendations
+
+    Example request:
+    ```json
+    {
+        "query": "What do I need to do today with patient Juan de Marco?"
+    }
+    ```
+    """
+    if not research_agent:
+        raise HTTPException(status_code=503, detail="Research agent not initialized")
+
+    try:
+        logger.info(f"Research query: {request.query[:50]}...")
+
+        # Perform research using agentic loop
+        result = research_agent.research(query=request.query)
+
+        # Check for errors
+        if result.get('error'):
+            raise HTTPException(
+                status_code=500,
+                detail=result.get('message', 'Research failed')
+            )
+
+        # Build response
+        return ResearchResponse(
+            query=request.query,
+            answer=result["answer"],
+            agent=result["agent"],
+            iterations=result.get("iterations", 0),
+            tool_calls=result.get("tool_calls", 0),
+            tool_call_history=result.get("tool_call_history", []),
+            timestamp=datetime.utcnow().isoformat()
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error in research query: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 

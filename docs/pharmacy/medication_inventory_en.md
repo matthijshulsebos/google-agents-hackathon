@@ -102,15 +102,20 @@ This document provides current medication inventory levels, stock management pro
 ### Schedule II Medications
 Special storage and documentation requirements apply.
 
-| Medication | Strength | Current Count | Location | Last Count Date |
-|------------|----------|---------------|----------|-----------------|
-| Morphine Sulfate | 10mg/mL | 150 vials | Vault A-1 | Jan 20, 2025 |
-| Hydrocodone/APAP | 5/325mg | 450 tablets | Vault A-2 | Jan 20, 2025 |
-| Fentanyl | 50mcg/hr | 75 patches | Vault A-3 | Jan 20, 2025 |
-| Methylphenidate | 10mg | 320 tablets | Vault A-4 | Jan 20, 2025 |
-| Oxycodone | 5mg | 580 tablets | Vault A-5 | Jan 20, 2025 |
+| Medication | Strength | Current Count | Location | Last Count Date | Last Audit Date (Geriatric) |
+|------------|----------|---------------|----------|-----------------|----------------------------|
+| Morphine Sulfate | 10mg/mL | 150 vials | Vault A-1 | Jan 20, 2025 | Sep 15, 2024 |
+| Hydrocodone/APAP | 5/325mg | 450 tablets | Vault A-2 | Jan 20, 2025 | Aug 22, 2024 |
+| Fentanyl | 50mcg/hr | 75 patches | Vault A-3 | Jan 20, 2025 | Oct 10, 2024 |
+| Methylphenidate | 10mg | 320 tablets | Vault A-4 | Jan 20, 2025 | N/A (non-opioid) |
+| Oxycodone | 5mg | 580 tablets | Vault A-5 | Jan 20, 2025 | Apr 15, 2024 ⚠️ |
+| Oxycodone | 10mg | 320 tablets | Vault A-6 | Jan 20, 2025 | Apr 15, 2024 ⚠️ |
 
-**Note**: All controlled substances require dual pharmacist verification for dispensing.
+**Notes**:
+- All controlled substances require dual pharmacist verification for dispensing
+- ⚠️ **Geriatric Audit Alert**: Oxycodone last audited April 15, 2024 (>6 months ago). Per nursing protocol NURSE-CTRL-MED-001, patients over 60 years old cannot receive oxycodone until audit is completed
+- **Audit Requirement**: For patients over 60 receiving opioids (morphine, oxycodone, hydrocodone, fentanyl), a comprehensive medication audit must be completed every 6 months
+- Audit includes: therapy appropriateness, effectiveness, absence of dependence, proper documentation
 
 ## Cold Storage (2-8°C) Medications
 
