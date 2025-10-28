@@ -64,6 +64,36 @@ A sophisticated multi-agent system built with Google ADK (Application Developmen
 - "When can I request time off?"
 - "Do we have any antibiotics in stock?"
 
+### Patient-Specific Queries (Multilingual)
+
+#### English
+- "What medications is Juan de Marco scheduled for today?"
+- "Show me Maria Silva's medical history"
+- "What are Robert Johnson's allergies?"
+- "Tell me about Emily Zhang's current location"
+- "What medications is David Martinez taking?"
+- "Show me Sarah O'Connor's scheduled medications"
+- "What is Thomas Anderson's medical history?"
+- "What medications is Lisa Rodriguez scheduled for today?"
+
+#### Spanish
+- "¿Qué medicamentos está programado para tomar Juan de Marco hoy?"
+- "Muéstrame el historial médico de Robert Johnson"
+- "¿Cuáles son las alergias de Maria Silva?"
+- "¿Qué medicamentos está tomando David Martinez?"
+
+#### French
+- "Quels médicaments sont prévus pour Emily Zhang aujourd'hui?"
+- "Montrez-moi les allergies de Sarah O'Connor"
+- "Quel est l'historique médical de Thomas Anderson?"
+- "Où se trouve Lisa Rodriguez actuellement?"
+
+#### German
+- "Welche Medikamente sind für Juan de Marco heute geplant?"
+- "Zeigen Sie mir die Krankengeschichte von Maria Silva"
+- "Was sind die Allergien von Robert Johnson?"
+- "Welche Medikamente nimmt David Martinez ein?"
+
 ## 🏗️ System Components
 
 The system consists of two main components:
