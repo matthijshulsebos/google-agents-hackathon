@@ -1,42 +1,80 @@
-# Hospital Multi-Agent Information Retrieval System
+# MnM Hospital Multi-Agent Information Retrieval System
 
-A sophisticated multi-agent system built with Google ADK (Application Development Kit) and Vertex AI Search that intelligently routes queries to specialized AI agents for hospital staff.
+<p align="center">
+  <img src="../assets/Google_AI_Studio_banner_image.png" alt="The Problem: Frustrated Healthcare Workers Searching for Information" width="28%">
+</p>
+
+---
+
+It's 3 AM in the cardiology ward. A newly rotated nurse needs to verify the hospital's protocol for administering high-dose anticoagulation therapy to a post-operative patient. The information exists somewhere. She checks the SharePoint site her supervisor mentioned during onboarding. Nothing under "Cardiology Protocols." She tries the shared drive. There are three folders labeled "Protocols," each containing dozens of PDFs. She searches her email for that message from last month. Was it the updated version or the draft?
+
+Twenty minutes later, after checking three different locations and skimming through outdated policy documents, she finds what she believes is the current protocol: a PDF dated six months ago. But is it the latest version? She can't be certain. Meanwhile, her patient is waiting, and four other tasks demand her attention.
+
+The process has not been done yet! Does she have actually the medicine that doctor prescribed? What is the precedure to check medication in the inventory of pharmacy? She knows that there was some information about checking medications in the onboarding document. Where is the onboarding document? Nerve-wrancking...
+
+Of course, it is a hypothetical situation, yet similar scenarios repeat themselves thousands of times daily across hospitals worldwide. The problem isn't a lack of information. Modern hospitals are drowning in policies, procedures, protocols, and guidelines. The problem is **retrieval**: getting the right information to the right person at the right time, in a format they can act upon.
+
+But here's what makes this particularly interesting: we're not talking about patient data retrieval. We're talking about institutional knowledge. The policies, standard operating procedures, clinical guidelines, HR regulations, and facility protocols that every staff member, from physicians to logistics coordinators, needs to do their job effectively. And unlike patient data, this information doesn't have the same GDPR or HIPAA constraints, making it a good candidate for AI-powered solutions.
+
+In this project, we design a multi-agent information retrieval system to save hundreds of hours of healthcare workers. Let's dive in!!!
+
+
+A sophisticated multi-agent system built with Google ADK (Application Development Kit) and Vertex AI Search that intelligently routes queries to specialized AI agents for hospital staff. The system includes a **Help/Onboarding Agent** (Priority 1) that guides new users on how to use the system before routing to domain experts.
 
 ## Overview
 
-This system serves three primary user types—**Nurses**, **HR Employees**, and **Pharmacists**—with multilingual support across **English**, **Spanish**, **French**, and **German**. The orchestrator intelligently routes queries to specialized agents, each backed by Vertex AI Search for document grounding and accurate information retrieval.
+This system serves three primary user types—**Nurses**, **HR Employees**, and **Pharmacists**—with multilingual support across **English**, **Spanish**, **French**, and **German**.
+
+The orchestrator is the backbone of the entire system and uses **2-tier priority routing**: Priority 1 checks for "how to use" queries and routes to the Help Agent for guidance; since some of healthcare workers may not be familiar with AI Chat tools. Priority 2 routes domain questions to specialized agents (Nursing, HR, Pharmacy), each backed by Vertex AI Search for document grounding and accurate information retrieval.
+
+**New users?** Simply ask "How do I use this system?" and the Help Agent will guide you with role-specific examples!
 
 ### Key Features
 
+- 🆘 **Help/Onboarding Agent**: Priority 1 routing for "how to use" queries - guides users with examples
 - ✨ **Multi-Agent Orchestration**: Intelligent routing to specialized domain agents
-- 🌐 **Multilingual Support**: EN, ES, FR, DE with automatic language detection
+- 🌐 **Multilingual Support**: English, Spanish, French, German with automatic language detection
 - 🔍 **Vertex AI Search Integration**: Document grounding with citations
 - 📚 **Domain Expertise**: Specialized agents for Nursing, HR, and Pharmacy
 - 🤖 **Google ADK Powered**: Built on Gemini 2.0 Flash
-- 🎯 **Intelligent Routing**: Keyword and AI-based query classification
+- 🎯 **Priority-Based Routing**: 2-tier routing (help first, then domain agents)
 
 ## Architecture
 
 ### Layer 1: Orchestrator
-- Routes queries to appropriate specialized agents
-- Provides intelligent query classification
+- **Priority 1 Routing**: Help/onboarding queries checked FIRST
+- **Priority 2 Routing**: Domain-specific query classification
 - Supports both explicit (role-based) and implicit (content-based) routing
+- Intelligent detection of "how to use" vs "domain content" queries
 
 ### Layer 2: Specialized Agents
+
+#### Priority 1 Agent (Checked First)
+**Help/Onboarding Agent** (EN/ES/FR/DE)
+- Guides users on how to use the system
+- Provides role-specific example questions
+- Detects "how to use" queries with 30+ patterns
+- Never answers domain questions directly
+- Routes: "How do I use this?" → Help Agent
+
+#### Priority 2 Agents (Domain Experts)
 1. **Nursing Agent** (English/Spanish)
    - Medical procedures and protocols
    - Patient care guidelines
    - Safety procedures
+   - Routes: "How do I insert an IV?" → Nursing Agent
 
 2. **HR Agent** (English/French)
    - Leave policies and benefits
    - Public holidays
    - Employee procedures
+   - Routes: "How many vacation days?" → HR Agent
 
 3. **Pharmacy Agent** (English/German)
    - Medication inventory
    - Drug information
    - Storage requirements
+   - Routes: "Is ibuprofen in stock?" → Pharmacy Agent
 
 ### Layer 3: Vertex AI Search
 - Three separate datastores (one per domain)
@@ -66,12 +104,17 @@ hospital-multiagent-system/
 ├── .env.example               # Environment variables template
 ├── .gitignore                 # Git ignore rules
 │
+├── assets/                    # Images and media
+│   └── hospital-problem-banner.png  # Banner image
+│
 ├── agents/                    # Specialized agents
 │   ├── __init__.py
+│   ├── help_agent.py         # Help/Onboarding agent (Priority 1)
 │   ├── nursing_agent.py      # Nursing domain agent
 │   ├── hr_agent.py           # HR domain agent
 │   ├── pharmacy_agent.py     # Pharmacy domain agent
 │   └── prompts/              # Agent system instructions
+│       ├── help_prompts.py
 │       ├── nursing_prompts.py
 │       ├── hr_prompts.py
 │       └── pharmacy_prompts.py
@@ -88,10 +131,13 @@ hospital-multiagent-system/
 │   ├── hr/                  # HR policies (EN/FR)
 │   └── pharmacy/            # Pharmacy inventory (EN/DE)
 │
-├── tests/                    # Test suite (to be implemented)
-│   └── __init__.py
+├── tests/                    # Test suite
+│   ├── __init__.py
+│   └── test_help_agent.py   # Help agent tests (7/7 passing)
 │
 ├── demo.py                   # Demo script
+├── demo_help_agent.py        # Help agent demo script
+├── HELP_AGENT_IMPLEMENTATION.md  # Help agent documentation
 │
 └── outputs/                  # Demo results output
     └── .gitkeep
@@ -256,11 +302,20 @@ from orchestrator import HospitalOrchestrator
 # Initialize orchestrator
 orchestrator = HospitalOrchestrator()
 
-# Process a query with explicit role
+# Help query - automatically routes to Help Agent (Priority 1)
+result = orchestrator.process_query(
+    query="How do I use this system as a nurse?"
+)
+print(result['answer'])  # Provides guidance with example questions
+print(f"Priority: {result['routing_info']['priority']}")  # Output: 1
+
+# Domain query - routes to Nursing Agent (Priority 2)
 result = orchestrator.process_query(
     query="How do I insert an IV line?",
     user_role="nurse"
 )
+print(result['answer'])  # Provides actual protocol information
+print(f"Priority: {result['routing_info']['priority']}")  # Output: 2
 
 # Process a query with intelligent routing
 result = orchestrator.process_query(
@@ -276,14 +331,22 @@ print(f"Language: {result['language']}")
 ### Using Individual Agents
 
 ```python
+from agents.help_agent import HelpAgent
 from agents.nursing_agent import NursingAgent
 from agents.hr_agent import HRAgent
 from agents.pharmacy_agent import PharmacyAgent
 
-# Initialize specific agent
-nursing = NursingAgent(project_id="your-project-id")
+# Use Help Agent for onboarding
+help_agent = HelpAgent(project_id="your-project-id")
+result = help_agent.provide_guidance("How do I use this as a nurse?")
+print(result['answer'])  # Shows nursing-specific examples
 
-# Query the agent
+# Check if a query is a help query
+is_help = HelpAgent.is_help_query("Can I check inventory here?")
+print(f"Is help query: {is_help}")  # True
+
+# Use domain agents for actual questions
+nursing = NursingAgent(project_id="your-project-id")
 result = nursing.search_protocols("How do I insert an IV?")
 print(result['answer'])
 
@@ -308,7 +371,16 @@ Main orchestrator class for routing queries.
 
 ### Individual Agents
 
-All agents inherit from `BaseAgent` and provide domain-specific methods:
+All agents provide domain-specific methods:
+
+#### HelpAgent (Priority 1)
+
+- `provide_guidance(query, temperature=0.3)` - Provide system usage guidance
+- `is_help_query(query)` - Static method to detect help queries (used by orchestrator)
+- `detect_language(text)` - Detect query language (EN/ES/FR/DE)
+- `detect_user_role(query)` - Detect user role from query context
+
+**Note:** Help Agent does NOT answer domain questions. It guides users with examples.
 
 #### NursingAgent
 
@@ -358,6 +430,25 @@ The orchestrator uses two routing methods:
 Configuration in `utils/query_classifier.py`.
 
 ## Example Queries
+
+### Help/Onboarding (All Languages)
+
+**Priority 1 queries - checked FIRST before routing to domain agents:**
+
+```
+EN: "How do I use this system as a nurse?"
+ES: "¿Cómo puedo usar este sistema?"
+FR: "Comment utiliser ce système?"
+DE: "Wie benutze ich dieses System?"
+
+EN: "What questions can I ask?"
+EN: "Can I check pharmacy inventory here?"
+EN: "What is this tool for?"
+```
+
+**Response:** Provides guidance with 3-5 role-specific example questions
+
+---
 
 ### Nursing (English/Spanish)
 
@@ -467,14 +558,41 @@ To add new functionality to an agent:
 
 ## Testing
 
-Basic test structure is provided in `tests/` directory. To add comprehensive tests:
+### Help Agent Tests
+
+The Help Agent includes comprehensive test coverage:
 
 ```bash
 # Install test dependencies
 pip install pytest pytest-asyncio pytest-cov
 
-# Run tests (to be implemented)
-pytest tests/
+# Run help agent tests
+pytest tests/test_help_agent.py -v
+
+# Run manual test scenarios
+python3 tests/test_help_agent.py
+
+# Run help agent demo
+python3 demo_help_agent.py
+```
+
+**Test Coverage:**
+- ✅ Help query detection (7/7 passing)
+- ✅ Multilingual support (EN/ES/FR/DE)
+- ✅ Domain query exclusion
+- ✅ Language detection
+- ✅ Role detection
+- ✅ Integration with orchestrator
+
+**Test Results:** All 7 core detection tests passing
+
+### Additional Tests
+
+To add more comprehensive tests for other agents:
+
+```bash
+# Run all tests (to be expanded)
+pytest tests/ -v
 ```
 
 ## License
@@ -506,12 +624,18 @@ For issues and questions:
 
 ## Roadmap
 
-Future enhancements:
+Completed features:
 
 - [x] **HTTP REST API** with FastAPI
 - [x] **RAG Pipeline** with Vertex AI Search + Gemini
 - [x] **Interactive API Documentation** (Swagger/ReDoc)
-- [ ] Comprehensive test suite with pytest
+- [x] **Help/Onboarding Agent** with Priority 1 routing (NEW!)
+- [x] **Test Suite** for Help Agent (7/7 passing)
+- [x] **Multilingual Detection** (EN/ES/FR/DE)
+
+Future enhancements:
+
+- [ ] Comprehensive test suite for all agents with pytest
 - [ ] Streamlit web UI
 - [ ] Additional languages (Italian, Portuguese)
 - [ ] Multi-agent consultation mode

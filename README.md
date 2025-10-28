@@ -1,6 +1,26 @@
-# Hospital Multi-Agent Information Retrieval System
+# MnM Hospital Multi-Agent Information Retrieval System
 
-A sophisticated AI-powered hospital information system that intelligently assists nurses, HR staff, and pharmacists with domain-specific queries using Google's Vertex AI and multi-agent orchestration.
+<p align="center">
+  <img src="assets/Google_AI_Studio_banner_image.png" alt="The Problem: Frustrated Healthcare Workers Searching for Information" width="40%">
+</p>
+
+---
+
+It's 3 AM in the cardiology ward. A newly rotated nurse needs to verify the hospital's protocol for administering high-dose anticoagulation therapy to a post-operative patient. The information exists somewhere. She checks the SharePoint site her supervisor mentioned during onboarding. Nothing under "Cardiology Protocols." She tries the shared drive. There are three folders labeled "Protocols," each containing dozens of PDFs. She searches her email for that message from last month. Was it the updated version or the draft?
+
+Twenty minutes later, after checking three different locations and skimming through outdated policy documents, she finds what she believes is the current protocol: a PDF dated six months ago. But is it the latest version? She can't be certain. Meanwhile, her patient is waiting, and four other tasks demand her attention.
+
+The process has not been done yet! Does she have actually the medicine that doctor prescribed? What is the precedure to check medication in the inventory of pharmacy? She knows that there was some information about checking medications in the onboarding document. Where is the onboarding document? Nerve-wrancking...
+
+Of course, it is a hypothetical situation, yet similar scenarios repeat themselves thousands of times daily across hospitals worldwide. The problem isn't a lack of information. Modern hospitals are drowning in policies, procedures, protocols, and guidelines. The problem is **retrieval**: getting the right information to the right person at the right time, in a format they can act upon.
+
+But here's what makes this particularly interesting: we're not talking about patient data retrieval. We're talking about institutional knowledge. The policies, standard operating procedures, clinical guidelines, HR regulations, and facility protocols that every staff member, from physicians to logistics coordinators, needs to do their job effectively. And unlike patient data, this information doesn't have the same GDPR or HIPAA constraints, making it a good candidate for AI-powered solutions.
+
+In this project, we design a multi-agent information retrieval system to save hundreds of hours of healthcare workers. Let's dive in!!!
+
+
+A sophisticated multi-agent system built with Google ADK (Application Development Kit) and Vertex AI Search that intelligently routes queries to specialized AI agents for hospital staff. The system includes a **Help/Onboarding Agent** (Priority 1) that guides new users on how to use the system before routing to domain experts.
+
 
 ## 🚀 Live Demo
 
@@ -39,150 +59,43 @@ A sophisticated AI-powered hospital information system that intelligently assist
 - "When can I request time off?"
 - "Do we have any antibiotics in stock?"
 
-## 🏗️ Technology Stack
+## 🏗️ System Components
 
-### Frontend (agent-ui)
-- **React 18** - Modern UI library with hooks
-- **TypeScript** - Type-safe development
-- **Vite** - Fast build tool and dev server
-- **Tailwind CSS** - Utility-first styling
-- **Lucide React** - Icon library
-- **React Markdown** - Rich message rendering
-- **Firebase Hosting** - Scalable web hosting
+The system consists of two main components:
 
-### Backend (agent-api)
-- **Python 3.11** - Modern Python runtime
-- **FastAPI** - High-performance async web framework
-- **Google ADK (Application Development Kit)** - AI agent framework
-- **Vertex AI Search** - Document retrieval and grounding
-- **Gemini 2.0 Flash** - Advanced language model
-- **Cloud Run** - Serverless container deployment
+### 1. 🔧 [Agent API](./agent-api/)
+**Backend Multi-Agent System**
 
-### Infrastructure
-- **Google Cloud Platform** - Cloud infrastructure
-- **Vertex AI** - AI/ML platform
-- **Cloud Storage** - Document storage
-- **Cloud Run** - Serverless compute
-- **Firebase** - Frontend hosting
+The core intelligence layer featuring:
+- 🆘 Help/Onboarding Agent (Priority 1)
+- 🏥 Nursing Agent (Medical procedures - EN/ES)
+- 💼 HR Agent (Policies & benefits - EN/FR)
+- 💊 Pharmacy Agent (Medication inventory - EN/DE)
+- 🎯 Intelligent orchestrator with 2-tier priority routing
+- 🔍 Vertex AI Search integration
+- 📚 Document grounding with citations
 
-## 📁 Project Structure
+**[📖 View Agent API Documentation →](./agent-api/README.md)**
 
-```
-google-agents-hackathon/
-├── agent-api/                 # Backend API service
-│   ├── agents/                # Specialized AI agents
-│   │   ├── nursing_agent.py   # Medical procedures agent
-│   │   ├── hr_agent.py        # HR policies agent
-│   │   └── pharmacy_agent.py  # Medication inventory agent
-│   ├── orchestrator.py        # Query routing orchestrator
-│   ├── api.py                 # FastAPI application
-│   └── Dockerfile             # Container configuration
-│
-└── agent-ui/                  # Frontend React application
-    ├── src/
-    │   ├── components/        # React components
-    │   ├── services/          # API integration
-    │   └── context/           # State management
-    └── firebase.json          # Firebase configuration
-```
+---
 
-## 🎨 Features
+### 2. 🖥️ [Agent UI](./agent-ui/)
+**Frontend User Interface**
 
-### Multi-Agent Orchestration
-- **Intelligent Routing**: Automatically determines which specialized agent should handle each query
-- **Domain Expertise**: Each agent is optimized for its specific domain (Nursing, HR, Pharmacy)
-- **Keyword & AI Classification**: Uses both keyword matching and AI-powered classification
+User-friendly interface for healthcare workers:
+- 💬 Chat interface for queries
+- 🎨 Role-based access (Nurse/Employee/Pharmacist)
+- 🌐 Multilingual support
+- 📱 Responsive design
+- 🔄 Real-time responses
 
-### Multilingual Support
-- **4 Languages**: English, Spanish, French, German
-- **Auto-Detection**: Automatically detects query language
-- **Native Responses**: Responds in the same language as the query
+**[📖 View Agent UI Documentation →](./agent-ui/README.md)**
 
-### Document Grounding
-- **Vertex AI Search**: Powered by Google's enterprise search technology
-- **Citation Tracking**: All answers include references to source documents
-- **Verified Information**: Responses based on actual hospital policies and protocols
+---
 
-### Interactive UI
-- **Chat Interface**: Conversational interface for natural queries
-- **Medication Panels**: Rich display of medication inventory data
-- **Alert System**: Real-time critical and warning alerts
-- **Quick Actions**: Fast access to common queries
-- **Responsive Design**: Works on desktop and mobile devices
+## 🚀 Quick Navigation
 
-## 🚦 How It Works
-
-1. **User Query**: User submits a question through the web interface
-2. **Language Detection**: System detects the query language
-3. **Intelligent Routing**: Orchestrator routes to appropriate agent (Nursing/HR/Pharmacy)
-4. **Document Search**: Agent queries Vertex AI Search for relevant documents
-5. **AI Response**: Gemini 2.0 generates grounded response with citations
-6. **Rich Display**: UI renders response with formatting, citations, and structured data
-
-## 📊 Architecture Overview
-
-```
-┌─────────────┐
-│   User UI   │ (React + Firebase)
-└──────┬──────┘
-       │
-       ▼
-┌─────────────┐
-│  FastAPI    │ (Cloud Run)
-└──────┬──────┘
-       │
-       ▼
-┌─────────────┐
-│ Orchestrator│ (Query Classification)
-└──────┬──────┘
-       │
-       ├──────────┬──────────┬──────────┐
-       ▼          ▼          ▼          ▼
-   Nursing     HR Agent   Pharmacy  (Specialized)
-   Agent                   Agent
-       │          │          │
-       ▼          ▼          ▼
-┌────────────────────────────────┐
-│    Vertex AI Search            │
-│  (3 Domain-Specific Stores)    │
-└────────────────────────────────┘
-       │
-       ▼
-┌────────────────────────────────┐
-│  Hospital Documents (PDF/MD)   │
-└────────────────────────────────┘
-```
-
-## 🛠️ Development
-
-### Backend Setup
-```bash
-cd agent-api
-pip install -r requirements.txt
-uvicorn api:app --reload
-```
-
-### Frontend Setup
-```bash
-cd agent-ui
-npm install
-npm run dev
-```
-
-### Deployment
-- **Frontend**: Deployed to Firebase Hosting
-- **Backend**: Deployed to Google Cloud Run
-
-## 📝 Documentation
-
-- [Agent API Documentation](./agent-api/README.md) - Backend API details
-- [Agent UI Documentation](./agent-ui/README.md) - Frontend application guide
-- [Google Agents Integration](./agent-ui/GOOGLE_AGENTS_INTEGRATION.md) - API integration guide
-
-## 🏆 Built For
-
-Google ADK Hackathon - Multi-Agent Information Retrieval System
-
-## 📄 License
-
-MIT License
+- **[Agent API Documentation](./agent-api/README.md)** - Backend system details, API reference, setup guide
+- **[Agent UI Documentation](./agent-ui/README.md)** - Frontend application, usage guide, components
+- **[API Usage Guide](./agent-api/API_USAGE.md)** - HTTP API endpoints and examples
+- **[Help Agent Implementation](./agent-api/HELP_AGENT_IMPLEMENTATION.md)** - Complete guide for the onboarding agent
