@@ -55,50 +55,53 @@ class DomainAgent:
         return "\n".join(formatted)
 
 
-class FinanceAgent(DomainAgent):
-    """Agent for financial domain queries."""
+class NursingAgent(DomainAgent):
+    """Agent for nursing domain queries."""
     
     def __init__(self, project_id: str, location: str, datastore_id: str, top_k: int = 5):
-        super().__init__("finance", project_id, location, datastore_id, top_k)
+        super().__init__("nursing", project_id, location, datastore_id, top_k)
         self.keywords = [
-            "budget", "cost", "expense", "revenue", "invoice", "payment",
-            "billing", "financial", "accounting", "procurement", "vendor"
+            "nurse", "nursing", "patient care", "vital signs", "medication administration",
+            "rounds", "shift", "assessment", "care plan", "bedside", "charting", "intake"
         ]
     
     def is_relevant(self, query: str) -> bool:
-        """Check if query is relevant to finance domain."""
+        """Check if query is relevant to nursing domain."""
         query_lower = query.lower()
         return any(keyword in query_lower for keyword in self.keywords)
 
 
-class LegalAgent(DomainAgent):
-    """Agent for legal domain queries."""
+class PharmacyAgent(DomainAgent):
+    """Agent for pharmacy domain queries."""
     
     def __init__(self, project_id: str, location: str, datastore_id: str, top_k: int = 5):
-        super().__init__("legal", project_id, location, datastore_id, top_k)
+        super().__init__("pharmacy", project_id, location, datastore_id, top_k)
         self.keywords = [
-            "policy", "compliance", "regulation", "law", "legal", "contract",
-            "agreement", "liability", "hipaa", "privacy", "consent", "rights"
+            "pharmacy", "medication", "drug", "prescription", "dosage", "pharmaceutical",
+            "adverse", "interaction", "formulary", "dispense", "refill", "therapeutic"
         ]
     
     def is_relevant(self, query: str) -> bool:
-        """Check if query is relevant to legal domain."""
+        """Check if query is relevant to pharmacy domain."""
         query_lower = query.lower()
         return any(keyword in query_lower for keyword in self.keywords)
 
 
-class HealthcareAgent(DomainAgent):
-    """Agent for healthcare domain queries."""
+class HRAgent(DomainAgent):
+    """Agent for HR (Human Resources) documents."""
     
     def __init__(self, project_id: str, location: str, datastore_id: str, top_k: int = 5):
-        super().__init__("healthcare", project_id, location, datastore_id, top_k)
+        super().__init__("po", project_id, location, datastore_id, top_k)
+        # Keywords that indicate HR queries
         self.keywords = [
-            "patient", "treatment", "protocol", "medical", "diagnosis", "procedure",
-            "medication", "clinical", "health", "care", "doctor", "nurse", "therapy"
+            "hr", "human resources", "employee", "personnel", "staff",
+            "hiring", "recruitment", "onboarding", "benefits", "payroll",
+            "vacation", "leave", "training", "performance", "contract",
+            "salary", "compensation", "policy", "handbook", "time off"
         ]
     
     def is_relevant(self, query: str) -> bool:
-        """Check if query is relevant to healthcare domain."""
+        """Check if query is relevant to HR domain."""
         query_lower = query.lower()
         return any(keyword in query_lower for keyword in self.keywords)
 
@@ -117,38 +120,38 @@ class AgentRegistry:
         """Initialize all domain agents."""
         top_k = self.config.get("retrieval", {}).get("top_k", 5)
         
-        # Finance agent
-        finance_config = self.config.get("vertex_search", {}).get("finance", {})
-        if finance_config.get("datastore_id"):
-            self.agents["finance"] = FinanceAgent(
+        # Nursing agent
+        nursing_config = self.config.get("vertex_search", {}).get("nursing", {})
+        if nursing_config.get("datastore_id"):
+            self.agents["nursing"] = NursingAgent(
                 project_id=self.project_id,
                 location=self.location,
-                datastore_id=finance_config["datastore_id"],
+                datastore_id=nursing_config["datastore_id"],
                 top_k=top_k
             )
-            logger.info("Initialized Finance agent")
+            logger.info("Initialized Nursing agent")
         
-        # Legal agent
-        legal_config = self.config.get("vertex_search", {}).get("legal", {})
-        if legal_config.get("datastore_id"):
-            self.agents["legal"] = LegalAgent(
+        # Pharmacy agent
+        pharmacy_config = self.config.get("vertex_search", {}).get("pharmacy", {})
+        if pharmacy_config.get("datastore_id"):
+            self.agents["pharmacy"] = PharmacyAgent(
                 project_id=self.project_id,
                 location=self.location,
-                datastore_id=legal_config["datastore_id"],
+                datastore_id=pharmacy_config["datastore_id"],
                 top_k=top_k
             )
-            logger.info("Initialized Legal agent")
+            logger.info("Initialized Pharmacy agent")
         
-        # Healthcare agent
-        healthcare_config = self.config.get("vertex_search", {}).get("healthcare", {})
-        if healthcare_config.get("datastore_id"):
-            self.agents["healthcare"] = HealthcareAgent(
+        # HR agent
+        po_config = self.config.get("vertex_search", {}).get("po", {})
+        if po_config.get("datastore_id"):
+            self.agents["po"] = HRAgent(
                 project_id=self.project_id,
                 location=self.location,
-                datastore_id=healthcare_config["datastore_id"],
+                datastore_id=po_config["datastore_id"],
                 top_k=top_k
             )
-            logger.info("Initialized Healthcare agent")
+            logger.info("Initialized HR agent")
     
     def get_agent(self, domain: str) -> Optional[DomainAgent]:
         """Get agent for a specific domain."""

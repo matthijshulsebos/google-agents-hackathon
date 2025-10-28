@@ -47,9 +47,9 @@ def setup_all_buckets():
         return
     
     buckets = [
-        settings.finance_bucket,
-        settings.legal_bucket,
-        settings.healthcare_bucket
+        settings.nursing_bucket,
+        settings.pharmacy_bucket,
+        settings.po_bucket
     ]
     
     for bucket_name in buckets:

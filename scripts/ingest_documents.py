@@ -4,6 +4,12 @@ Script to ingest documents from GCS buckets into Vertex AI Search.
 """
 import argparse
 import logging
+import sys
+import os
+
+# Add parent directory to path
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from src.config import settings, config
 from src.ingestion.document_processor import DocumentProcessor
 from src.ingestion.vertex_search import VertexSearchIndexer
@@ -40,6 +46,11 @@ def ingest_bucket(domain: str, bucket_name: str, datastore_id: str):
         logger.warning("No documents to index!")
         return
     
+    # Debug: Show first document
+    if documents:
+        logger.info(f"Sample document content length: {len(documents[0].get('content', ''))} chars")
+        logger.info(f"Sample content preview: {documents[0].get('content', '')[:200]}")
+    
     # Initialize indexer
     indexer = VertexSearchIndexer(
         project_id=project_id,
@@ -60,9 +71,9 @@ def ingest_bucket(domain: str, bucket_name: str, datastore_id: str):
 def ingest_all_domains():
     """Ingest documents from all domains."""
     domains = [
-        ("finance", settings.finance_bucket, settings.finance_datastore_id),
-        ("legal", settings.legal_bucket, settings.legal_datastore_id),
-        ("healthcare", settings.healthcare_bucket, settings.healthcare_datastore_id)
+        ("nursing", settings.nursing_bucket, settings.nursing_datastore_id),
+        ("pharmacy", settings.pharmacy_bucket, settings.pharmacy_datastore_id),
+        ("po", settings.po_bucket, settings.po_datastore_id)
     ]
     
     for domain, bucket, datastore_id in domains:

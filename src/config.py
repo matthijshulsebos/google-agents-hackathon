@@ -15,15 +15,15 @@ class Settings(BaseSettings):
     gcp_project_id: str = Field(default="", env="GCP_PROJECT_ID")
     gcp_location: str = Field(default="us-central1", env="GCP_LOCATION")
     
-    # Buckets
-    finance_bucket: str = Field(default="finance-bucket", env="FINANCE_BUCKET")
-    legal_bucket: str = Field(default="legal-bucket", env="LEGAL_BUCKET")
-    healthcare_bucket: str = Field(default="healthcare-bucket", env="HEALTHCARE_BUCKET")
+    # Buckets (existing)
+    nursing_bucket: str = Field(default="nursing", env="NURSING_BUCKET")
+    pharmacy_bucket: str = Field(default="pharmacy", env="PHARMACY_BUCKET")
+    po_bucket: str = Field(default="po", env="PO_BUCKET")
     
-    # Vertex AI Search Datastores
-    finance_datastore_id: str = Field(default="", env="FINANCE_DATASTORE_ID")
-    legal_datastore_id: str = Field(default="", env="LEGAL_DATASTORE_ID")
-    healthcare_datastore_id: str = Field(default="", env="HEALTHCARE_DATASTORE_ID")
+    # Vertex AI Search Datastores (to be created)
+    nursing_datastore_id: str = Field(default="", env="NURSING_DATASTORE_ID")
+    pharmacy_datastore_id: str = Field(default="", env="PHARMACY_DATASTORE_ID")
+    po_datastore_id: str = Field(default="", env="PO_DATASTORE_ID")
     
     # API Settings
     port: int = Field(default=8080, env="PORT")

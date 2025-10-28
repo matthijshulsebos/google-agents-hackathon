@@ -6,22 +6,24 @@ gcp:
   location: "us-central1"
   
 # GCS Bucket Configuration
+# Map your existing buckets to domains
 buckets:
-  finance: "finance-bucket"
-  legal: "legal-bucket"
-  healthcare: "healthcare-bucket"
+  nursing: "nursing"
+  pharmacy: "pharmacy"
+  po: "po"  # Purchase Orders / Procurement
 
 # Vertex AI Search Configuration
+# Datastores need to be created to enable AI search over your bucket contents
 vertex_search:
-  finance:
-    datastore_id: "finance-datastore"
+  nursing:
+    datastore_id: "nursing-datastore-v5"
     serving_config_id: "default_config"
-  legal:
-    datastore_id: "legal-datastore"
+  pharmacy:
+    datastore_id: "pharmacy-datastore-v5"
     serving_config_id: "default_config"
-  healthcare:
-    datastore_id: "healthcare-datastore"
-    serving_config_id: "default_config"
+  po:
+    bucket: "po"  # HR bucket
+    datastore_id: "po-datastore-v5"
 
 # LLM Configuration
 llm:
