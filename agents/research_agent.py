@@ -375,6 +375,61 @@ class ResearchAgent:
                 "message": f"Search error: {str(e)}"
             }
 
+    def _generate_summary(
+        self,
+        detailed_answer: str,
+        query: str,
+        temperature: float = 0.2
+    ) -> str:
+        """
+        Generate a concise summary of the detailed answer for chatbot use
+
+        Args:
+            detailed_answer: Full detailed answer from research
+            query: Original user query
+            temperature: Model temperature
+
+        Returns:
+            Concise 2-3 sentence summary
+        """
+        try:
+            summary_prompt = f"""Given the detailed research answer below, create a concise 2-3 sentence summary suitable for a chatbot conversation.
+
+The summary should:
+- Capture the most critical information and actions needed
+- Be conversational and easy to understand
+- Highlight any urgent safety concerns or compliance issues
+- Be suitable for displaying in a chat interface
+
+Original query: {query}
+
+Detailed answer:
+{detailed_answer}
+
+Provide ONLY the summary (2-3 sentences), nothing else:"""
+
+            response = self.gemini_client.models.generate_content(
+                model=self.model_name,
+                contents=summary_prompt,
+                config=types.GenerateContentConfig(
+                    temperature=temperature
+                )
+            )
+
+            if response.candidates and len(response.candidates) > 0:
+                summary = response.candidates[0].content.parts[0].text.strip()
+                logger.info(f"Generated summary: {summary[:100]}...")
+                return summary
+            else:
+                # Fallback: return first 200 chars of detailed answer
+                logger.warning("Failed to generate summary, using fallback")
+                return detailed_answer[:200] + "..."
+
+        except Exception as e:
+            logger.error(f"Error generating summary: {str(e)}")
+            # Fallback: return first 200 chars
+            return detailed_answer[:200] + "..."
+
     def research(
         self,
         query: str,
@@ -501,8 +556,14 @@ Current date: """ + datetime.now().strftime("%B %d, %Y")
                         final_answer = first_part.text
                         logger.info(f"Research completed after {iteration} iterations")
 
+                        # Generate summary for chatbot use
+                        logger.info("Generating summary version...")
+                        summary = self._generate_summary(final_answer, query, temperature)
+
                         return {
-                            "answer": final_answer,
+                            "answer": final_answer,  # Full detailed answer
+                            "answer_detailed": final_answer,  # Explicit detailed version
+                            "answer_summary": summary,  # Concise summary for chatbot
                             "agent": "research",
                             "iterations": iteration,
                             "tool_calls": len(tool_call_history),

@@ -106,7 +106,9 @@ class ResearchRequest(BaseModel):
 class ResearchResponse(BaseModel):
     """Research response model."""
     query: str = Field(..., description="Original query")
-    answer: str = Field(..., description="Research answer")
+    answer: str = Field(..., description="Full detailed research answer")
+    answer_summary: str = Field(..., description="Concise 2-3 sentence summary for chatbot display")
+    answer_detailed: str = Field(..., description="Full detailed answer with all information")
     agent: str = Field(..., description="Agent type (research)")
     iterations: int = Field(..., description="Number of reasoning iterations")
     tool_calls: int = Field(..., description="Number of tool calls made")
@@ -347,6 +349,27 @@ async def research_query(request: ResearchRequest):
         "query": "What do I need to do today with patient Juan de Marco?"
     }
     ```
+
+    Example response:
+    ```json
+    {
+        "query": "What do I need to do today with patient Juan de Marco?",
+        "answer": "Full detailed answer with all information...",
+        "answer_summary": "Juan de Marco (65) is scheduled for Oxycodone 5mg, but you must check the pharmacy audit system first—if the audit is overdue (>6 months), hold the medication and notify the physician, pain management team, and pharmacy.",
+        "answer_detailed": "Full detailed answer with all information...",
+        "agent": "research",
+        "iterations": 4,
+        "tool_calls": 3,
+        "tool_call_history": [...],
+        "timestamp": "2025-10-28T..."
+    }
+    ```
+
+    Response fields:
+    - `answer`: Full detailed research answer (same as answer_detailed)
+    - `answer_summary`: Concise 2-3 sentence summary perfect for chatbot display
+    - `answer_detailed`: Full detailed answer with all context and information
+    - Use `answer_summary` for quick chatbot responses, `answer_detailed` for full details
     """
     if not research_agent:
         raise HTTPException(status_code=503, detail="Research agent not initialized")
@@ -367,7 +390,9 @@ async def research_query(request: ResearchRequest):
         # Build response
         return ResearchResponse(
             query=request.query,
-            answer=result["answer"],
+            answer=result["answer"],  # Full detailed answer
+            answer_summary=result.get("answer_summary", result["answer"][:200] + "..."),  # Summary for chatbot
+            answer_detailed=result.get("answer_detailed", result["answer"]),  # Explicit detailed version
             agent=result["agent"],
             iterations=result.get("iterations", 0),
             tool_calls=result.get("tool_calls", 0),
