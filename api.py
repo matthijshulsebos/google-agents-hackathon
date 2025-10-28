@@ -135,6 +135,7 @@ async def startup_event():
         research_agent = ResearchAgent(
             project_id=config.PROJECT_ID,
             nursing_agent=orchestrator.nursing_agent,
+            hr_agent=orchestrator.hr_agent,
             pharmacy_agent=orchestrator.pharmacy_agent,
             location=config.LOCATION
         )
@@ -327,7 +328,7 @@ async def research_query(request: ResearchRequest):
 
     This endpoint uses a ReAct-style agent that iteratively:
     1. Reasons about what information is needed
-    2. Calls tools to gather information (patient data, nursing protocols, pharmacy info)
+    2. Calls tools to gather information (patient data, nursing protocols, pharmacy info, HR policies)
     3. Observes results and determines next steps
     4. Synthesizes findings into a comprehensive answer
 
@@ -341,6 +342,7 @@ async def research_query(request: ResearchRequest):
     - Get patient details (age, scheduled medications)
     - Check relevant nursing protocols
     - Verify pharmacy inventory and audit compliance
+    - Check HR policies if employee-related questions arise
     - Provide actionable recommendations
 
     Example request:

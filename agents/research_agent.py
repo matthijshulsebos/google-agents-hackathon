@@ -7,6 +7,7 @@ import logging
 from datetime import datetime, timedelta
 from google import genai
 from google.genai import types
+from data.patient_data import get_patient_details
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +22,7 @@ class ResearchAgent:
         self,
         project_id: str,
         nursing_agent=None,
+        hr_agent=None,
         pharmacy_agent=None,
         location: str = "us-central1",
         model_name: str = "gemini-2.5-flash",
@@ -32,6 +34,7 @@ class ResearchAgent:
         Args:
             project_id: Google Cloud Project ID
             nursing_agent: NursingAgent instance (optional, will create if not provided)
+            hr_agent: HRAgent instance (optional, will create if not provided)
             pharmacy_agent: PharmacyAgent instance (optional, will create if not provided)
             location: GCP location
             model_name: Gemini model to use
@@ -56,6 +59,12 @@ class ResearchAgent:
             self.nursing_agent = NursingAgent(project_id=project_id, location=location)
         else:
             self.nursing_agent = nursing_agent
+
+        if hr_agent is None:
+            from agents.hr_agent import HRAgent
+            self.hr_agent = HRAgent(project_id=project_id, location=location)
+        else:
+            self.hr_agent = hr_agent
 
         if pharmacy_agent is None:
             from agents.pharmacy_agent import PharmacyAgent
@@ -123,12 +132,29 @@ class ResearchAgent:
             }
         )
 
+        # Tool 4: Search HR policies
+        search_hr_policies = types.FunctionDeclaration(
+            name="search_hr_policies",
+            description="Search HR policies, employee benefits, leave policies, public holidays, workplace procedures, and employment information. Use this to find information about vacation days, sick leave, employee benefits, public holidays, HR procedures, and workplace policies. Returns detailed policy information.",
+            parameters={
+                "type": "OBJECT",
+                "properties": {
+                    "query": {
+                        "type": "STRING",
+                        "description": "Natural language search query for HR policies. Formulate specific queries about employee benefits, leave policies, holidays, or workplace procedures (e.g., 'annual leave policy for nurses', 'public holidays 2025', 'sick leave procedures', 'employee benefits for healthcare workers'). Include specific context when available."
+                    }
+                },
+                "required": ["query"]
+            }
+        )
+
         # Combine all tools
         return types.Tool(
             function_declarations=[
                 get_patient_details,
                 search_nursing_procedures,
-                search_pharmacy_info
+                search_pharmacy_info,
+                search_hr_policies
             ]
         )
 
@@ -147,13 +173,16 @@ class ResearchAgent:
             logger.info(f"Executing tool: {function_name} with args: {arguments}")
 
             if function_name == "get_patient_details":
-                return self._get_patient_details(arguments.get("patient_name", ""))
+                return get_patient_details(arguments.get("patient_name", ""))
 
             elif function_name == "search_nursing_procedures":
                 return self._search_nursing_procedures(arguments.get("query", ""))
 
             elif function_name == "search_pharmacy_info":
                 return self._search_pharmacy_info(arguments.get("query", ""))
+
+            elif function_name == "search_hr_policies":
+                return self._search_hr_policies(arguments.get("query", ""))
 
             else:
                 return {
@@ -166,129 +195,6 @@ class ResearchAgent:
             return {
                 "error": True,
                 "message": f"Tool execution error: {str(e)}"
-            }
-
-    def _get_patient_details(self, patient_name: str) -> Dict[str, Any]:
-        """
-        Get patient details (hardcoded for demo)
-
-        Args:
-            patient_name: Patient name
-
-        Returns:
-            Patient information
-        """
-        # Hardcoded patient database for demo
-        patients = {
-            "juan de marco": {
-                "name": "Juan de Marco",
-                "age": 65,
-                "date_of_birth": "1960-03-15",
-                "medical_record_number": "MRN-789456",
-                "scheduled_medications_today": [
-                    {
-                        "medication": "Oxycodone",
-                        "strength": "5mg",
-                        "scheduled_time": "09:00 AM",
-                        "route": "Oral",
-                        "reason": "Post-surgical pain management"
-                    },
-                    {
-                        "medication": "Metformin",
-                        "strength": "500mg",
-                        "scheduled_time": "08:00 AM, 08:00 PM",
-                        "route": "Oral",
-                        "reason": "Type 2 Diabetes"
-                    },
-                    {
-                        "medication": "Lisinopril",
-                        "strength": "10mg",
-                        "scheduled_time": "08:00 AM",
-                        "route": "Oral",
-                        "reason": "Hypertension"
-                    }
-                ],
-                "medical_history": [
-                    "Type 2 Diabetes (diagnosed 2015)",
-                    "Hypertension (diagnosed 2018)",
-                    "Total knee replacement surgery (January 20, 2025)"
-                ],
-                "allergies": ["Penicillin (rash)"],
-                "current_location": "Room 302, Orthopedic Ward",
-                "attending_physician": "Dr. Sarah Thompson"
-            },
-            "maria silva": {
-                "name": "Maria Silva",
-                "age": 45,
-                "date_of_birth": "1980-07-22",
-                "medical_record_number": "MRN-456123",
-                "scheduled_medications_today": [
-                    {
-                        "medication": "Ibuprofen",
-                        "strength": "400mg",
-                        "scheduled_time": "10:00 AM, 06:00 PM",
-                        "route": "Oral",
-                        "reason": "Chronic back pain"
-                    },
-                    {
-                        "medication": "Omeprazole",
-                        "strength": "20mg",
-                        "scheduled_time": "08:00 AM",
-                        "route": "Oral",
-                        "reason": "GERD"
-                    }
-                ],
-                "medical_history": [
-                    "Chronic lower back pain (diagnosed 2019)",
-                    "GERD (diagnosed 2020)"
-                ],
-                "allergies": ["None"],
-                "current_location": "Room 215, General Medicine",
-                "attending_physician": "Dr. Michael Chen"
-            },
-            "robert johnson": {
-                "name": "Robert Johnson",
-                "age": 72,
-                "date_of_birth": "1953-11-08",
-                "medical_record_number": "MRN-321654",
-                "scheduled_medications_today": [
-                    {
-                        "medication": "Morphine Sulfate",
-                        "strength": "10mg",
-                        "scheduled_time": "08:00 AM, 02:00 PM, 08:00 PM",
-                        "route": "Injectable",
-                        "reason": "Cancer pain management"
-                    },
-                    {
-                        "medication": "Warfarin",
-                        "strength": "5mg",
-                        "scheduled_time": "06:00 PM",
-                        "route": "Oral",
-                        "reason": "Atrial fibrillation"
-                    }
-                ],
-                "medical_history": [
-                    "Stage IV lung cancer (diagnosed 2024)",
-                    "Atrial fibrillation (diagnosed 2021)",
-                    "History of deep vein thrombosis"
-                ],
-                "allergies": ["Sulfa drugs (severe reaction)"],
-                "current_location": "Room 410, Oncology",
-                "attending_physician": "Dr. Jennifer Lee"
-            }
-        }
-
-        # Normalize patient name for lookup
-        normalized_name = patient_name.lower().strip()
-
-        if normalized_name in patients:
-            patient_data = patients[normalized_name]
-            logger.info(f"Found patient: {patient_data['name']}, age {patient_data['age']}")
-            return patient_data
-        else:
-            return {
-                "error": True,
-                "message": f"Patient '{patient_name}' not found in system. Available patients: {', '.join([p['name'] for p in patients.values()])}"
             }
 
     def _search_nursing_procedures(self, query: str) -> Dict[str, Any]:
@@ -375,6 +281,48 @@ class ResearchAgent:
                 "message": f"Search error: {str(e)}"
             }
 
+    def _search_hr_policies(self, query: str) -> Dict[str, Any]:
+        """
+        Search HR policies using HRAgent
+
+        Args:
+            query: Search query
+
+        Returns:
+            Search results from HR policies
+        """
+        logger.info(f"Searching HR policies for: {query}")
+
+        try:
+            result = self.hr_agent.search_policies(query, temperature=0.1)
+
+            if result.get('error'):
+                return {
+                    "error": True,
+                    "message": f"HR search failed: {result.get('message', 'Unknown error')}"
+                }
+
+            # Return formatted result optimized for tool response
+            return {
+                "answer": result.get("answer", ""),
+                "total_results": result.get("total_results", 0),
+                "sources": [
+                    {
+                        "title": source.get("title", ""),
+                        "snippet": source.get("snippet", "")[:300]  # Limit snippet length
+                    }
+                    for source in result.get("grounding_metadata", [])[:3]  # Limit to top 3 sources
+                ],
+                "query": query
+            }
+
+        except Exception as e:
+            logger.error(f"Error in HR policy search: {str(e)}")
+            return {
+                "error": True,
+                "message": f"Search error: {str(e)}"
+            }
+
     def _generate_summary(
         self,
         detailed_answer: str,
@@ -455,11 +403,12 @@ Your capabilities:
 1. Access patient records to understand patient details, age, scheduled medications, and medical history
 2. Search nursing protocols and procedures for clinical guidelines and requirements
 3. Search pharmacy inventory for medication availability, audit dates, and drug information
+4. Search HR policies for employee benefits, leave policies, public holidays, and workplace procedures
 
 Your approach:
 - Think step-by-step and reason through what information you need
 - Use tools iteratively to gather relevant information
-- Cross-reference information from different sources (patient data, nursing protocols, pharmacy info)
+- Cross-reference information from different sources (patient data, nursing protocols, pharmacy info, HR policies)
 - Pay special attention to age-specific requirements and safety protocols
 - Identify any compliance issues or missing information
 - Provide a clear, actionable answer based on all gathered information
@@ -468,7 +417,8 @@ When handling questions about patient care:
 1. First, get patient details to understand their age, medications, and context
 2. Then, search relevant protocols or procedures
 3. Then, check pharmacy information if medication-related
-4. Finally, synthesize all information to provide a complete answer
+4. If the question involves employee/staff information, search HR policies
+5. Finally, synthesize all information to provide a complete answer
 
 CRITICAL - When formulating search queries for tools:
 - DO NOT use generic queries - always include specific context from previous tool results
