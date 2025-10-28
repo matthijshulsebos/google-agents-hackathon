@@ -38,23 +38,24 @@ class VertexSearchIndexer:
             for idx, doc in enumerate(documents):
                 # Create safe document ID (only alphanumeric, hyphen, underscore allowed)
                 filename = doc['metadata']['filename']
-                safe_filename = filename.replace('.', '_').replace(' ', '_')
+                safe_filename = filename.replace('.', '_').replace(' ', '_').replace('/', '_')
                 doc_id = f"{safe_filename}_chunk_{doc['metadata']['chunk_id']}"
                 
-                                # For NO_CONTENT datastores: use struct_data with text_content field
                 content_text = doc["content"]
                 logger.info(f"Indexing doc {doc_id}: content length = {len(content_text)} chars")
                 
-                # Put metadata AND content in struct_data
-                doc_data = dict(doc["metadata"])
-                doc_data["text_content"] = content_text  # This will be searchable
-                
-                # Create document
+                # For CONTENT_REQUIRED datastores: use document.content for searchable text
+                # and struct_data for metadata only
                 document = discoveryengine.Document()
                 document.id = doc_id
-                document.struct_data = doc_data  # Everything in struct_data for NO_CONTENT datastores
+                document.content = discoveryengine.Document.Content(
+                    mime_type="text/plain",
+                    raw_bytes=content_text.encode('utf-8')
+                )
+                # Metadata in struct_data (not searchable, just for filtering/display)
+                document.struct_data = doc["metadata"]
                 
-                logger.info(f"Document struct_data keys: {list(doc_data.keys())}")
+                logger.info(f"Document metadata keys: {list(doc['metadata'].keys())}")
                 
                 # Try to create document, if exists (409), update it
                 try:
@@ -102,11 +103,14 @@ class VertexSearchRetriever:
         self.datastore_id = datastore_id
         self.engine_id = engine_id or f"{datastore_id}-app"  # Default engine naming convention
         
-        # Initialize client
+        # Initialize clients
         client_options = ClientOptions(
             api_endpoint=f"{location}-discoveryengine.googleapis.com"
         )
         self.client = discoveryengine.SearchServiceClient(
+            client_options=client_options
+        )
+        self.document_client = discoveryengine.DocumentServiceClient(
             client_options=client_options
         )
         
@@ -119,17 +123,13 @@ class VertexSearchRetriever:
     def search(self, query: str, top_k: int = 5) -> List[Dict[str, Any]]:
         """Search for documents matching the query."""
         try:
+            # Request document content in search results
             request = discoveryengine.SearchRequest(
                 serving_config=self.serving_config,
                 query=query,
                 page_size=top_k,
                 content_search_spec=discoveryengine.SearchRequest.ContentSearchSpec(
-                    snippet_spec=discoveryengine.SearchRequest.ContentSearchSpec.SnippetSpec(
-                        return_snippet=True
-                    ),
-                    summary_spec=discoveryengine.SearchRequest.ContentSearchSpec.SummarySpec(
-                        summary_result_count=top_k
-                    )
+                    search_result_mode=discoveryengine.SearchRequest.ContentSearchSpec.SearchResultMode.DOCUMENTS
                 )
             )
             
@@ -144,22 +144,26 @@ class VertexSearchRetriever:
                     "score": 0.0
                 }
                 
-                # For NO_CONTENT datastores, content is in struct_data["text_content"]
-                if hasattr(result.document, 'struct_data'):
-                    struct = dict(result.document.struct_data)
-                    # Extract the text content
-                    if 'text_content' in struct:
-                        doc_data["content"] = struct['text_content']
-                    # Store other metadata
-                    doc_data["metadata"] = {k: v for k, v in struct.items() if k != 'text_content'}
-                
-                # Also try snippets if available (more relevant excerpts)
-                if not doc_data["content"] and hasattr(result.document, 'derived_struct_data'):
-                    derived_data = dict(result.document.derived_struct_data)
-                    if 'snippets' in derived_data:
-                        snippets = derived_data['snippets']
-                        if snippets:
-                            doc_data["content"] = snippets[0].get('snippet', '')
+                # Fetch full document to get content (raw_bytes not included in search results by default)
+                try:
+                    full_doc = self.document_client.get_document(name=result.document.name)
+                    
+                    # Extract content from full document
+                    if hasattr(full_doc, 'content') and full_doc.content:
+                        if hasattr(full_doc.content, 'raw_bytes') and full_doc.content.raw_bytes:
+                            doc_data["content"] = full_doc.content.raw_bytes.decode('utf-8')
+                        elif hasattr(full_doc.content, 'uri'):
+                            doc_data["content"] = f"[Content at: {full_doc.content.uri}]"
+                    
+                    # Metadata is in struct_data
+                    if hasattr(full_doc, 'struct_data') and full_doc.struct_data:
+                        doc_data["metadata"] = dict(full_doc.struct_data)
+                        
+                except Exception as fetch_error:
+                    logger.warning(f"Could not fetch full document {result.document.name}: {fetch_error}")
+                    # Fall back to what's available in search result
+                    if hasattr(result.document, 'struct_data') and result.document.struct_data:
+                        doc_data["metadata"] = dict(result.document.struct_data)
                 
                 results.append(doc_data)
             

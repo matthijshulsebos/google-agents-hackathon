@@ -53,25 +53,50 @@ class TextExtractor:
     
     @staticmethod
     def extract_from_xlsx(file_content: bytes) -> str:
-        """Extract text from Excel file."""
+        """Extract text from Excel file and convert to natural language."""
         text = []
         try:
             # Read all sheets
             df_dict = pd.read_excel(io.BytesIO(file_content), sheet_name=None)
             for sheet_name, df in df_dict.items():
-                text.append(f"=== Sheet: {sheet_name} ===")
-                # Convert dataframe to string representation
-                text.append(df.to_string(index=False))
+                text.append(f"Sheet: {sheet_name}")
+                
+                # Convert each row to natural language sentences
+                for _, row in df.iterrows():
+                    row_parts = []
+                    for col, value in row.items():
+                        if pd.notna(value) and str(value).strip():
+                            row_parts.append(f"{col}: {value}")
+                    
+                    if row_parts:
+                        text.append(". ".join(row_parts) + ".")
+                
+                text.append("")  # Empty line between sheets
         except Exception as e:
             logger.error(f"Error extracting XLSX: {e}")
         return "\n\n".join(text)
     
     @staticmethod
     def extract_from_csv(file_content: bytes) -> str:
-        """Extract text from CSV file."""
+        """Extract text from CSV file and convert to natural language."""
         try:
             df = pd.read_csv(io.BytesIO(file_content))
-            return df.to_string(index=False)
+            
+            # Convert each row to natural language sentences
+            text_lines = []
+            for _, row in df.iterrows():
+                # Create a sentence from each row
+                row_parts = []
+                for col, value in row.items():
+                    if pd.notna(value) and str(value).strip():
+                        # Format: "ColumnName: value"
+                        row_parts.append(f"{col}: {value}")
+                
+                # Join all column-value pairs with commas
+                if row_parts:
+                    text_lines.append(". ".join(row_parts) + ".")
+            
+            return "\n\n".join(text_lines)
         except Exception as e:
             logger.error(f"Error extracting CSV: {e}")
             return ""

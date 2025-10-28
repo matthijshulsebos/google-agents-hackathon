@@ -43,15 +43,17 @@ def create_search_app(project_id: str, location: str, datastore_id: str, engine_
         except NotFound:
             pass  # Engine doesn't exist, proceed with creation
         
-        # Create the engine
+        # Create the engine with common config (no LLM add-on for standard tier)
         engine = discoveryengine.Engine(
             display_name=display_name,
             solution_type=discoveryengine.SolutionType.SOLUTION_TYPE_SEARCH,
             industry_vertical=discoveryengine.IndustryVertical.GENERIC,
             data_store_ids=[datastore_id],
             search_engine_config=discoveryengine.Engine.SearchEngineConfig(
-                search_tier=discoveryengine.SearchTier.SEARCH_TIER_STANDARD,
-                search_add_ons=[discoveryengine.SearchAddOn.SEARCH_ADD_ON_LLM]
+                search_tier=discoveryengine.SearchTier.SEARCH_TIER_STANDARD
+            ),
+            common_config=discoveryengine.Engine.CommonConfig(
+                company_name="Hospital"
             )
         )
         

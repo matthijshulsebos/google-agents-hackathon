@@ -46,7 +46,7 @@ def create_datastore(project_id: str, location: str, datastore_id: str, display_
             display_name=display_name,
             industry_vertical=discoveryengine.IndustryVertical.GENERIC,
             solution_types=[discoveryengine.SolutionType.SOLUTION_TYPE_SEARCH],
-            content_config=discoveryengine.DataStore.ContentConfig.NO_CONTENT
+            content_config=discoveryengine.DataStore.ContentConfig.CONTENT_REQUIRED
         )
         
         request = discoveryengine.CreateDataStoreRequest(

@@ -54,8 +54,8 @@ def search_nursing_domain(query: str) -> Dict[str, Any]:
     formatted_results = []
     for r in results[:3]:
         formatted_results.append({
-            "text": r.get("content", "")[:200],  # First 200 chars
-            "source": r.get("metadata", {}).get("source", "")
+            "text": r.get("content", ""),  # Full content
+            "source": r.get("metadata", {}).get("filename", "")
         })
     
     return {
@@ -83,7 +83,7 @@ def search_pharmacy_domain(query: str) -> Dict[str, Any]:
     results = pharmacy_agent.search(query)
     return {
         "domain": "pharmacy",
-        "results": [{"text": r.get("content", ""), "source": r.get("metadata", {}).get("source", "")} for r in results[:3]],
+        "results": [{"text": r.get("content", ""), "source": r.get("metadata", {}).get("filename", "")} for r in results[:3]],
         "count": len(results)
     }
 
@@ -106,7 +106,7 @@ def search_hr_domain(query: str) -> Dict[str, Any]:
     results = hr_agent.search(query)
     return {
         "domain": "hr",
-        "results": [{"text": r.get("content", ""), "source": r.get("metadata", {}).get("source", "")} for r in results[:3]],
+        "results": [{"text": r.get("content", ""), "source": r.get("metadata", {}).get("filename", "")} for r in results[:3]],
         "count": len(results)
     }
 

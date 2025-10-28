@@ -16,14 +16,14 @@ buckets:
 # Datastores need to be created to enable AI search over your bucket contents
 vertex_search:
   nursing:
-    datastore_id: "nursing-datastore-v5"
+    datastore_id: "nursing-datastore-v6"
     serving_config_id: "default_config"
   pharmacy:
-    datastore_id: "pharmacy-datastore-v5"
+    datastore_id: "pharmacy-datastore-v6"
     serving_config_id: "default_config"
   po:
     bucket: "po"  # HR bucket
-    datastore_id: "po-datastore-v5"
+    datastore_id: "po-datastore-v6"
 
 # LLM Configuration
 llm:
