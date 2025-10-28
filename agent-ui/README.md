@@ -1,5 +1,11 @@
 # MedAssist Nursing Assistant
 
+<p align="center">
+  <img src="../assets/agent_tool_gui.png" alt="GUI of the tool" width="70%">
+</p>
+
+---
+
 A comprehensive nursing assistant dashboard built with React, TypeScript, and Tailwind CSS. This application provides nurses with quick access to schedules, patient information, emergency protocols, medication inventory, and interactive AI assistance.
 
 ## Features
