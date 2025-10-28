@@ -91,7 +91,11 @@ Do not include any explanation, just the code."""
         )
 
         # Extract and clean the response
-        detected_lang = response.text.strip().lower()
+        if response and response.text:
+            detected_lang = response.text.strip().lower()
+        else:
+            logger.warning("Empty response from language detection, defaulting to 'en'")
+            return 'en'
 
         # Validate the response
         valid_languages = {'en', 'es', 'fr', 'de'}
