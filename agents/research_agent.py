@@ -405,20 +405,28 @@ Your capabilities:
 3. Search pharmacy inventory for medication availability, audit dates, and drug information
 4. Search HR policies for employee benefits, leave policies, public holidays, and workplace procedures
 
+CRITICAL RULES:
+- You MUST use the available search tools to gather actual information from the hospital systems
+- DO NOT make assumptions or generate answers based solely on patient data
+- DO NOT cite specific protocols, procedures, or inventory data unless you've retrieved them using the search tools
+- ALWAYS verify information by calling the appropriate search tools
+
 Your approach:
 - Think step-by-step and reason through what information you need
-- Use tools iteratively to gather relevant information
+- Use tools iteratively to gather relevant information from actual hospital systems
 - Cross-reference information from different sources (patient data, nursing protocols, pharmacy info, HR policies)
 - Pay special attention to age-specific requirements and safety protocols
 - Identify any compliance issues or missing information
-- Provide a clear, actionable answer based on all gathered information
+- Provide a clear, actionable answer based ONLY on information gathered through tool calls
 
-When handling questions about patient care:
-1. First, get patient details to understand their age, medications, and context
-2. Then, search relevant protocols or procedures
-3. Then, check pharmacy information if medication-related
-4. If the question involves employee/staff information, search HR policies
-5. Finally, synthesize all information to provide a complete answer
+REQUIRED WORKFLOW for patient care questions:
+1. FIRST: Call get_patient_details to understand their age, medications, and context
+2. THEN: Call search_nursing_procedures with specific queries about each medication or procedure
+3. THEN: Call search_pharmacy_info to verify medication availability and audit status
+4. IF relevant: Call search_hr_policies for employee/staff information
+5. FINALLY: After gathering information from ALL relevant sources, synthesize into a complete answer
+
+DO NOT skip steps 2-3. You must actually search for protocols and pharmacy data, not generate answers from what you think the protocols might say.
 
 CRITICAL - When formulating search queries for tools:
 - DO NOT use generic queries - always include specific context from previous tool results
@@ -463,46 +471,57 @@ Current date: """ + datetime.now().strftime("%B %d, %Y")
 
                 # Check if model wants to call a function
                 if response.candidates[0].content.parts:
-                    first_part = response.candidates[0].content.parts[0]
+                    parts = response.candidates[0].content.parts
 
-                    # If function call, execute it
-                    if hasattr(first_part, 'function_call') and first_part.function_call:
-                        function_call = first_part.function_call
-                        function_name = function_call.name
-                        function_args = dict(function_call.args)
+                    # Check if ANY part is a function call
+                    has_function_calls = any(hasattr(part, 'function_call') and part.function_call for part in parts)
 
-                        logger.info(f"Model called function: {function_name}")
+                    if has_function_calls:
+                        # Execute ALL function calls in this response
+                        function_response_parts = []
 
-                        # Execute the function
-                        tool_result = self._execute_tool(function_name, function_args)
+                        for part in parts:
+                            if hasattr(part, 'function_call') and part.function_call:
+                                function_call = part.function_call
+                                function_name = function_call.name
+                                function_args = dict(function_call.args)
 
-                        # Record tool call
-                        tool_call_history.append({
-                            "iteration": iteration,
-                            "function": function_name,
-                            "arguments": function_args,
-                            "result_summary": str(tool_result)[:200] + "..." if len(str(tool_result)) > 200 else str(tool_result)
-                        })
+                                logger.info(f"Model called function: {function_name}")
 
-                        # Add function call and response to conversation
-                        contents.append(response.candidates[0].content)
-                        contents.append(
-                            types.Content(
-                                role="user",
-                                parts=[
+                                # Execute the function
+                                tool_result = self._execute_tool(function_name, function_args)
+
+                                # Record tool call
+                                tool_call_history.append({
+                                    "iteration": iteration,
+                                    "function": function_name,
+                                    "arguments": function_args,
+                                    "result_summary": str(tool_result)[:200] + "..." if len(str(tool_result)) > 200 else str(tool_result)
+                                })
+
+                                # Add function response part
+                                function_response_parts.append(
                                     types.Part.from_function_response(
                                         name=function_name,
                                         response=tool_result
                                     )
-                                ]
+                                )
+
+                        # Add function call and ALL responses to conversation
+                        contents.append(response.candidates[0].content)
+                        contents.append(
+                            types.Content(
+                                role="user",
+                                parts=function_response_parts
                             )
                         )
 
-                        # Continue loop to let model process the result
+                        # Continue loop to let model process the results
                         continue
 
                     # If text response (no more function calls), we have final answer
-                    elif hasattr(first_part, 'text') and first_part.text:
+                    first_part = parts[0]
+                    if hasattr(first_part, 'text') and first_part.text:
                         final_answer = first_part.text
                         logger.info(f"Research completed after {iteration} iterations")
 
