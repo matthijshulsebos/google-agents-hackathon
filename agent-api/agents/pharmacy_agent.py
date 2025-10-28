@@ -4,9 +4,9 @@ Pharmacy Agent - Specialized agent for medication inventory and pharmaceutical i
 from typing import Dict, Any, List, Optional
 import logging
 from utils.rag_pipeline import RAGPipeline
+from utils.language_detector import detect_language_llm, get_language_instruction
 from agents.prompts.pharmacy_prompts import (
     PHARMACY_SYSTEM_INSTRUCTION,
-    get_language_specific_instruction,
     format_pharmacy_response_template,
     get_inventory_status_explanation
 )
@@ -56,12 +56,6 @@ class PharmacyAgent:
 
         logger.info(f"Pharmacy Agent initialized with RAG pipeline (engine: {self.datastore_id})")
 
-    def detect_language(self, text: str) -> str:
-        """Detect query language (English or German)"""
-        if any(word in text.lower() for word in ['ist', 'haben', 'wie', 'welche', 'verfügbar']):
-            return "de"
-        return "en"
-
     def search_inventory(
         self,
         query: str,
@@ -80,13 +74,13 @@ class PharmacyAgent:
             Dict with answer, search results, and metadata
         """
         try:
-            # Detect language
-            language = self.detect_language(query)
+            # Detect language using LLM
+            language = detect_language_llm(query)
             logger.info(f"Detected language: {language} for query: {query[:50]}...")
 
             # Build system instruction with language-specific additions
             system_instruction = PHARMACY_SYSTEM_INSTRUCTION
-            system_instruction += get_language_specific_instruction(language)
+            system_instruction += get_language_instruction(language)
             system_instruction += format_pharmacy_response_template()
             system_instruction += get_inventory_status_explanation(language)
 

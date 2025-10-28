@@ -401,29 +401,4 @@ class BaseAgent:
                 "query": user_query
             }
 
-    def detect_language(self, text: str) -> str:
-        """
-        Simple language detection based on keywords
-
-        Args:
-            text: Text to analyze
-
-        Returns:
-            Language code (en, es, fr, de)
-        """
-        text_lower = text.lower()
-
-        # Spanish indicators
-        if any(word in text_lower for word in ['¿', '¡', 'días', 'cómo', 'qué', 'cuál', 'protocolo']):
-            return "es"
-
-        # French indicators
-        if any(word in text_lower for word in ['combien', 'quels', 'jours', 'comment', 'quand', 'congé']):
-            return "fr"
-
-        # German indicators
-        if any(word in text_lower for word in ['ist', 'haben', 'wie', 'welche', 'verfügbar', 'lager']):
-            return "de"
-
-        # Default to English
-        return "en"
+# Language detection moved to utils/language_detector.py for centralized LLM-based detection

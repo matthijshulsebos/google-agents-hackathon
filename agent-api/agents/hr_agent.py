@@ -4,9 +4,9 @@ HR Agent - Specialized agent for HR policies, benefits, and employee questions
 from typing import Dict, Any, List, Optional
 import logging
 from utils.rag_pipeline import RAGPipeline
+from utils.language_detector import detect_language_llm, get_language_instruction
 from agents.prompts.hr_prompts import (
     HR_SYSTEM_INSTRUCTION,
-    get_language_specific_instruction,
     format_hr_response_template,
     get_calculation_prompt
 )
@@ -56,12 +56,6 @@ class HRAgent:
 
         logger.info(f"HR Agent initialized with RAG pipeline (engine: {self.datastore_id})")
 
-    def detect_language(self, text: str) -> str:
-        """Detect query language (English or French)"""
-        if any(word in text.lower() for word in ['combien', 'quels', 'jours', 'comment', 'puis-je']):
-            return "fr"
-        return "en"
-
     def search_policies(
         self,
         query: str,
@@ -80,13 +74,13 @@ class HRAgent:
             Dict with answer, search results, and metadata
         """
         try:
-            # Detect language
-            language = self.detect_language(query)
+            # Detect language using LLM
+            language = detect_language_llm(query)
             logger.info(f"Detected language: {language} for query: {query[:50]}...")
 
             # Build system instruction with language-specific additions
             system_instruction = HR_SYSTEM_INSTRUCTION
-            system_instruction += get_language_specific_instruction(language)
+            system_instruction += get_language_instruction(language)
             system_instruction += format_hr_response_template()
 
             # Use RAG pipeline to generate response

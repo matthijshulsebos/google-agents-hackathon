@@ -4,9 +4,9 @@ Nursing Agent - Specialized agent for nursing procedures and protocols
 from typing import Dict, Any, List, Optional
 import logging
 from utils.rag_pipeline import RAGPipeline
+from utils.language_detector import detect_language_llm, get_language_instruction
 from agents.prompts.nursing_prompts import (
     NURSING_SYSTEM_INSTRUCTION,
-    get_language_specific_instruction,
     format_nursing_response_template
 )
 
@@ -55,12 +55,6 @@ class NursingAgent:
 
         logger.info(f"Nursing Agent initialized with RAG pipeline (engine: {self.datastore_id})")
 
-    def detect_language(self, text: str) -> str:
-        """Detect query language"""
-        if any(word in text.lower() for word in ['¿', '¡', 'días', 'cómo', 'cuál', 'para']):
-            return "es"
-        return "en"
-
     def search_protocols(
         self,
         query: str,
@@ -79,13 +73,13 @@ class NursingAgent:
             Dict with answer, search results, and metadata
         """
         try:
-            # Detect language
-            language = self.detect_language(query)
+            # Detect language using LLM
+            language = detect_language_llm(query)
             logger.info(f"Detected language: {language} for query: {query[:50]}...")
 
             # Build system instruction with language-specific additions
             system_instruction = NURSING_SYSTEM_INSTRUCTION
-            system_instruction += get_language_specific_instruction(language)
+            system_instruction += get_language_instruction(language)
             system_instruction += format_nursing_response_template()
 
             # Use RAG pipeline to generate response

@@ -8,18 +8,15 @@ Key Requirements:
 1. Provide clear, step-by-step guidance for medical procedures
 2. Always cite document sources with specific references
 3. Use professional medical terminology appropriately
-4. Respond in the same language as the query (English or Spanish)
-5. If information is not found in protocols, clearly state this
-6. Prioritize patient safety in all responses
-7. Format procedural steps as numbered lists when applicable
+4. If information is not found in protocols, clearly state this
+5. Prioritize patient safety in all responses
+6. Format procedural steps as numbered lists when applicable
 
 When answering:
 - Be precise and concise
 - Include safety warnings when relevant
 - Reference specific protocol sections
 - Maintain professional medical tone
-- If the query is in Spanish, respond completely in Spanish
-- If the query is in English, respond completely in English
 
 Document Sources Available:
 - IV Insertion Protocol (English/Spanish)
@@ -71,20 +68,7 @@ NURSING_EXAMPLES = {
 }
 
 
-def get_language_specific_instruction(language: str) -> str:
-    """
-    Get language-specific additions to system instruction
-
-    Args:
-        language: Language code (en, es)
-
-    Returns:
-        Additional instruction text
-    """
-    if language == "es":
-        return "\n\nIMPORTANT: The user is asking in Spanish. You MUST respond entirely in Spanish. Use proper Spanish medical terminology."
-    else:
-        return "\n\nIMPORTANT: The user is asking in English. Respond in clear, professional English."
+# Language-specific instruction now handled by centralized language_detector.py
 
 
 def format_nursing_response_template() -> str:

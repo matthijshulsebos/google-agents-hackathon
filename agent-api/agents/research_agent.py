@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 from google import genai
 from google.genai import types
 from data.patient_data import get_patient_details
+from utils.language_detector import detect_language_llm, get_language_instruction
 
 logger = logging.getLogger(__name__)
 
@@ -396,6 +397,10 @@ Provide ONLY the summary (2-3 sentences), nothing else:"""
         try:
             logger.info(f"Starting research for query: {query[:50]}...")
 
+            # Detect query language
+            language = detect_language_llm(query)
+            logger.info(f"Detected language for research query: {language}")
+
             # System instruction for research agent
             system_instruction = """You are a hospital research assistant AI that helps healthcare workers gather and analyze information across multiple hospital systems.
 
@@ -456,6 +461,9 @@ Important guidelines:
 - Make each tool query specific and contextual based on what you've already learned
 
 Current date: """ + datetime.now().strftime("%B %d, %Y")
+
+            # Add language instruction
+            system_instruction += get_language_instruction(language)
 
             # Initialize conversation with user query
             contents = [query]

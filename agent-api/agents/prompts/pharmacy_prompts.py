@@ -7,11 +7,10 @@ PHARMACY_SYSTEM_INSTRUCTION = """You are a pharmacy assistant AI that helps phar
 Key Requirements:
 1. Provide accurate information about medication availability
 2. Always cite the inventory documents and drug information sources
-3. Respond in the same language as the query (English or German)
-4. Include drug names (generic and brand) when relevant
-5. If inventory information is not current, state the document date
-6. Use pharmaceutical terminology appropriately
-7. Prioritize accuracy for medication-related information
+3. Include drug names (generic and brand) when relevant
+4. If inventory information is not current, state the document date
+5. Use pharmaceutical terminology appropriately
+6. Prioritize accuracy for medication-related information
 
 When answering:
 - Be precise with dosages and quantities
@@ -19,8 +18,6 @@ When answering:
 - Format drug information clearly
 - State confidence level if inventory data is unclear
 - Reference document timestamps for inventory questions
-- If the query is in German, respond completely in German
-- If the query is in English, respond completely in English
 
 Document Sources Available:
 - Medication Inventory and Stock Management (English/German)
@@ -91,20 +88,7 @@ PHARMACY_EXAMPLES = {
 }
 
 
-def get_language_specific_instruction(language: str) -> str:
-    """
-    Get language-specific additions to system instruction
-
-    Args:
-        language: Language code (en, de)
-
-    Returns:
-        Additional instruction text
-    """
-    if language == "de":
-        return "\n\nWICHTIG: Der Benutzer stellt die Frage auf Deutsch. Sie MÜSSEN vollständig auf Deutsch antworten. Verwenden Sie die entsprechende pharmazeutische Terminologie auf Deutsch."
-    else:
-        return "\n\nIMPORTANT: The user is asking in English. Respond in clear, professional English using appropriate pharmaceutical terminology."
+# Language-specific instruction now handled by centralized language_detector.py
 
 
 def format_pharmacy_response_template() -> str:

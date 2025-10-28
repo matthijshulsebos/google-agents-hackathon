@@ -7,6 +7,7 @@ import logging
 from google import genai
 from google.genai import types
 from config import config
+from utils.language_detector import detect_language_llm, get_language_name, get_language_instruction
 from agents.prompts.help_prompts import (
     HELP_SYSTEM_INSTRUCTION,
     format_help_response,
@@ -51,29 +52,7 @@ class HelpAgent:
             logger.error(f"Failed to initialize Help Agent: {str(e)}")
             raise
 
-    def detect_language(self, text: str) -> str:
-        """
-        Detect query language
-
-        Args:
-            text: Query text
-
-        Returns:
-            Language code (en, es, fr, de)
-        """
-        text_lower = text.lower()
-
-        # Spanish
-        if any(word in text_lower for word in ['¿', '¡', 'cómo', 'cuál', 'puedo', 'usar', 'sistema']):
-            return "es"
-        # French
-        elif any(word in text_lower for word in ['comment', 'puis-je', 'utiliser', 'système', 'combien']):
-            return "fr"
-        # German
-        elif any(word in text_lower for word in ['wie', 'kann', 'ich', 'system', 'benutzen']):
-            return "de"
-
-        return "en"
+# Language detection now handled by centralized language_detector.py
 
     def detect_user_role(self, query: str) -> Optional[str]:
         """
@@ -127,7 +106,7 @@ class HelpAgent:
         """
         try:
             # Detect language and role
-            language = self.detect_language(query)
+            language = detect_language_llm(query)
             user_role = self.detect_user_role(query)
 
             logger.info(f"Help query - Language: {language}, Role: {user_role}")
@@ -154,7 +133,7 @@ class HelpAgent:
             if user_role:
                 system_instruction += f"\n\nThe user appears to be a {user_role}. Tailor your guidance accordingly."
 
-            system_instruction += f"\n\nRespond in {self._get_language_name(language)}."
+            system_instruction += get_language_instruction(language)
 
             # Add examples for context
             examples_data = get_help_examples_by_role(user_role, language)
@@ -223,15 +202,7 @@ class HelpAgent:
 
         return any(pattern in query_lower for pattern in simple_patterns)
 
-    def _get_language_name(self, code: str) -> str:
-        """Get full language name from code"""
-        names = {
-            "en": "English",
-            "es": "Spanish",
-            "fr": "French",
-            "de": "German"
-        }
-        return names.get(code, "English")
+# Language name helper now in language_detector.py
 
     @staticmethod
     def is_help_query(query: str) -> bool:

@@ -7,11 +7,10 @@ HR_SYSTEM_INSTRUCTION = """You are a helpful HR assistant AI that supports emplo
 Key Requirements:
 1. Provide clear answers about company policies and benefits
 2. Always cite the specific policy documents and sections
-3. Respond in the same language as the query (English or French)
-4. If a question requires personal data (specific to an employee), explain what general policy applies
-5. For calculations (vacation days, etc.), show the logic clearly
-6. Maintain a friendly but professional tone
-7. If information is not in policies, clearly state this
+3. If a question requires personal data (specific to an employee), explain what general policy applies
+4. For calculations (vacation days, etc.), show the logic clearly
+5. Maintain a friendly but professional tone
+6. If information is not in policies, clearly state this
 
 When answering:
 - Be helpful and empathetic
@@ -19,8 +18,6 @@ When answering:
 - Provide examples when helpful
 - Include relevant dates and deadlines
 - Direct to appropriate resources when needed
-- If the query is in French, respond completely in French
-- If the query is in English, respond completely in English
 
 Document Sources Available:
 - Annual Leave and Time Off Policy (English/French)
@@ -81,20 +78,7 @@ HR_EXAMPLES = {
 }
 
 
-def get_language_specific_instruction(language: str) -> str:
-    """
-    Get language-specific additions to system instruction
-
-    Args:
-        language: Language code (en, fr)
-
-    Returns:
-        Additional instruction text
-    """
-    if language == "fr":
-        return "\n\nIMPORTANT: L'utilisateur pose la question en français. Vous DEVEZ répondre entièrement en français. Utilisez la terminologie RH appropriée en français."
-    else:
-        return "\n\nIMPORTANT: The user is asking in English. Respond in clear, professional English."
+# Language-specific instruction now handled by centralized language_detector.py
 
 
 def format_hr_response_template() -> str:
