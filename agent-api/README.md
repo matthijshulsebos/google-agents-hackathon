@@ -1,4 +1,11 @@
 # MnM Hospital Multi-Agent Information Retrieval System
+
+<p align="center">
+  <img src="assets/hospital-problem-banner.png" alt="The Problem: Frustrated Healthcare Workers Searching for Information" width="100%">
+</p>
+
+---
+
 It's 3 AM in the cardiology ward. A newly rotated nurse needs to verify the hospital's protocol for administering high-dose anticoagulation therapy to a post-operative patient. The information exists somewhere. She checks the SharePoint site her supervisor mentioned during onboarding. Nothing under "Cardiology Protocols." She tries the shared drive. There are three folders labeled "Protocols," each containing dozens of PDFs. She searches her email for that message from last month. Was it the updated version or the draft?
 
 Twenty minutes later, after checking three different locations and skimming through outdated policy documents, she finds what she believes is the current protocol: a PDF dated six months ago. But is it the latest version? She can't be certain. Meanwhile, her patient is waiting, and four other tasks demand her attention.
@@ -96,6 +103,9 @@ hospital-multiagent-system/
 ├── config.py                   # Configuration management
 ├── .env.example               # Environment variables template
 ├── .gitignore                 # Git ignore rules
+│
+├── assets/                    # Images and media
+│   └── hospital-problem-banner.png  # Banner image
 │
 ├── agents/                    # Specialized agents
 │   ├── __init__.py
