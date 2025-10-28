@@ -25,7 +25,7 @@ A sophisticated multi-agent system built with Google ADK (Application Developmen
 
 This system serves three primary user types—**Nurses**, **HR Employees**, and **Pharmacists**—with multilingual support across **English**, **Spanish**, **French**, and **German**.
 
-The orchestrator uses **2-tier priority routing**: Priority 1 checks for "how to use" queries and routes to the Help Agent for guidance. Priority 2 routes domain questions to specialized agents (Nursing, HR, Pharmacy), each backed by Vertex AI Search for document grounding and accurate information retrieval.
+The orchestrator is the backbone of the entire system and uses **2-tier priority routing**: Priority 1 checks for "how to use" queries and routes to the Help Agent for guidance; since some of healthcare workers may not be familiar with AI Chat tools. Priority 2 routes domain questions to specialized agents (Nursing, HR, Pharmacy), each backed by Vertex AI Search for document grounding and accurate information retrieval.
 
 **New users?** Simply ask "How do I use this system?" and the Help Agent will guide you with role-specific examples!
 
@@ -33,7 +33,7 @@ The orchestrator uses **2-tier priority routing**: Priority 1 checks for "how to
 
 - 🆘 **Help/Onboarding Agent**: Priority 1 routing for "how to use" queries - guides users with examples
 - ✨ **Multi-Agent Orchestration**: Intelligent routing to specialized domain agents
-- 🌐 **Multilingual Support**: EN, ES, FR, DE with automatic language detection
+- 🌐 **Multilingual Support**: English, Spanish, French, German with automatic language detection
 - 🔍 **Vertex AI Search Integration**: Document grounding with citations
 - 📚 **Domain Expertise**: Specialized agents for Nursing, HR, and Pharmacy
 - 🤖 **Google ADK Powered**: Built on Gemini 2.0 Flash
