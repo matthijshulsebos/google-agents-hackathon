@@ -13,12 +13,16 @@ logger = logging.getLogger(__name__)
 CLASSIFICATION_PROMPT = """Analyze the following query and classify it into ONE category:
 
 Categories:
+- help: Questions about using the system, what questions to ask, system capabilities, guidance requests
 - nursing: Medical procedures, nursing protocols, patient care, clinical procedures, IV insertion, wound care, medication administration, vital signs
 - hr: Holidays, vacation, benefits, HR policies, employment questions, workplace policies, leave requests, sick leave, parental leave, time off
 - pharmacy: Medications, drug inventory, prescriptions, pharmaceutical information, medication availability, drug storage, controlled substances
 
 Examples:
-- "How do I insert an IV?" → nursing
+- "How do I use this system?" → help
+- "What can I ask?" → help
+- "Can I check pharmacy inventory here?" → help
+- "How do I insert an IV?" → nursing (actual medical question, not about the system)
 - "How many vacation days do I have?" → hr
 - "Is ibuprofen available?" → pharmacy
 - "¿Cuántos días festivos tenemos?" → hr
@@ -28,9 +32,13 @@ Examples:
 - "Combien de jours de congé?" → hr
 - "Welche Antibiotika sind verfügbar?" → pharmacy
 
+IMPORTANT:
+- "help" is for questions ABOUT the system itself
+- Domain categories (nursing/hr/pharmacy) are for actual content questions
+
 Query: {query}
 
-Respond with ONLY the category name: nursing, hr, or pharmacy
+Respond with ONLY the category name: help, nursing, hr, or pharmacy
 No explanation, just the category word."""
 
 
@@ -216,7 +224,7 @@ class QueryClassifier:
             category_text = response.text.strip().lower()
 
             # Validate category
-            valid_categories = ["nursing", "hr", "pharmacy"]
+            valid_categories = ["help", "nursing", "hr", "pharmacy"]
             category = None
 
             for valid_cat in valid_categories:

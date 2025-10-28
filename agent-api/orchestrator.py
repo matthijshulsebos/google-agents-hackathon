@@ -11,6 +11,7 @@ from utils.query_classifier import QueryClassifier
 from agents.nursing_agent import NursingAgent
 from agents.hr_agent import HRAgent
 from agents.pharmacy_agent import PharmacyAgent
+from agents.help_agent import HelpAgent
 
 # Set up logging
 logging.basicConfig(
@@ -79,14 +80,21 @@ class HospitalOrchestrator:
             location=self.location
         )
 
+        # Initialize help/onboarding agent (Priority 1 - no datastore needed)
+        self.help_agent = HelpAgent(
+            project_id=self.project_id,
+            location=self.location
+        )
+
         # Agent routing map
         self.agents = {
             "nursing": self.nursing_agent,
             "hr": self.hr_agent,
-            "pharmacy": self.pharmacy_agent
+            "pharmacy": self.pharmacy_agent,
+            "help": self.help_agent
         }
 
-        logger.info("Hospital Orchestrator initialized with all agents")
+        logger.info("Hospital Orchestrator initialized with all agents (including Help Agent)")
 
     def process_query(
         self,
@@ -119,14 +127,26 @@ class HospitalOrchestrator:
         try:
             logger.info(f"Processing query: {query[:50]}...")
 
-            # Determine which agent to use
-            if agent_override:
+            # PRIORITY 1: Check if this is a help/onboarding query
+            # Help queries are checked FIRST before any domain routing
+            if not agent_override and HelpAgent.is_help_query(query):
+                logger.info("Detected help/onboarding query - routing to Help Agent (Priority 1)")
+                agent_category = "help"
+                routing_info = {
+                    "method": "help_detection",
+                    "category": "help",
+                    "confidence": "high",
+                    "priority": 1
+                }
+            # PRIORITY 2: Domain routing (nursing, hr, pharmacy)
+            elif agent_override:
                 # Direct routing via override
                 agent_category = agent_override.lower()
                 routing_info = {
                     "method": "override",
                     "category": agent_category,
-                    "confidence": "explicit"
+                    "confidence": "explicit",
+                    "priority": 2
                 }
                 logger.info(f"Using agent override: {agent_category}")
 
@@ -136,6 +156,7 @@ class HospitalOrchestrator:
                     query=query,
                     user_role=user_role
                 )
+                routing_info["priority"] = 2
                 agent_category = routing_info['category']
                 logger.info(f"Routing to {agent_category} (method: {routing_info['method']}, "
                            f"confidence: {routing_info['confidence']})")
@@ -153,7 +174,9 @@ class HospitalOrchestrator:
                 }
 
             # Route to agent based on category
-            if agent_category == "nursing":
+            if agent_category == "help":
+                result = agent.provide_guidance(query)
+            elif agent_category == "nursing":
                 result = agent.search_protocols(query, conversation_history=conversation_history)
             elif agent_category == "hr":
                 result = agent.search_policies(query, conversation_history=conversation_history)
@@ -244,8 +267,16 @@ class HospitalOrchestrator:
         # Check each agent
         for agent_name, agent in self.agents.items():
             try:
+                # Help agent doesn't use RAG pipeline (no document search)
+                if agent_name == "help":
+                    health_status["agents"][agent_name] = {
+                        "healthy": True,
+                        "agent_type": agent.agent_type,
+                        "implementation": "Gemini Direct (no RAG)",
+                        "note": "Help agent provides guidance, not document search"
+                    }
                 # Check if agent has RAG pipeline initialized
-                if hasattr(agent, 'rag') and agent.rag:
+                elif hasattr(agent, 'rag') and agent.rag:
                     health_status["agents"][agent_name] = {
                         "healthy": True,
                         "agent_type": agent.agent_type,
@@ -287,20 +318,30 @@ class HospitalOrchestrator:
             "project_id": self.project_id,
             "location": self.location,
             "agents": {
+                "help": {
+                    "name": "Help/Onboarding Agent",
+                    "languages": ["English", "Spanish", "French", "German"],
+                    "specialization": "System guidance, onboarding, example questions",
+                    "priority": 1,
+                    "note": "Handles 'how to use' queries BEFORE domain routing"
+                },
                 "nursing": {
                     "name": "Nursing Agent",
                     "languages": ["English", "Spanish"],
-                    "specialization": "Medical procedures, protocols, patient care"
+                    "specialization": "Medical procedures, protocols, patient care",
+                    "priority": 2
                 },
                 "hr": {
                     "name": "HR Agent",
                     "languages": ["English", "French"],
-                    "specialization": "Policies, benefits, leave management"
+                    "specialization": "Policies, benefits, leave management",
+                    "priority": 2
                 },
                 "pharmacy": {
                     "name": "Pharmacy Agent",
                     "languages": ["English", "German"],
-                    "specialization": "Medication inventory, drug information"
+                    "specialization": "Medication inventory, drug information",
+                    "priority": 2
                 }
             }
         }
