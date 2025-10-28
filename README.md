@@ -10,14 +10,13 @@ It's 3 AM in the cardiology ward. A newly rotated nurse needs to verify the hosp
 
 Twenty minutes later, after checking three different locations and skimming through outdated policy documents, she finds what she believes is the current protocol: a PDF dated six months ago. But is it the latest version? She can't be certain. Meanwhile, her patient is waiting, and four other tasks demand her attention.
 
-The process has not been done yet! Does she have actually the medicine that doctor prescribed? What is the precedure to check medication in the inventory of pharmacy? She knows that there was some information about checking medications in the onboarding document. Where is the onboarding document? Nerve-wrancking...
+The process still isn't done. Does she even have the medication the doctor prescribed? What is the procedure to check medication availability in pharmacy inventory? She remembers seeing something about it in the onboarding document. But where is that document now? Nerve-wracking...
 
-Of course, it is a hypothetical situation, yet similar scenarios repeat themselves thousands of times daily across hospitals worldwide. The problem isn't a lack of information. Modern hospitals are drowning in policies, procedures, protocols, and guidelines. The problem is **retrieval**: getting the right information to the right person at the right time, in a format they can act upon.
+Of course, this is a hypothetical situation, yet similar scenarios play out thousands of times daily across hospitals worldwide. The problem isn't a lack of information. Modern hospitals are drowning in policies, procedures, protocols, and guidelines. The problem is retrieval: getting the right information to the right person at the right time, in a format they can act upon.
 
-But here's what makes this particularly interesting: we're not talking about patient data retrieval. We're talking about institutional knowledge. The policies, standard operating procedures, clinical guidelines, HR regulations, and facility protocols that every staff member, from physicians to logistics coordinators, needs to do their job effectively. And unlike patient data, this information doesn't have the same GDPR or HIPAA constraints, making it a good candidate for AI-powered solutions.
+But here's what makes this particularly interesting: we're not talking about patient data retrieval. We're talking about institutional knowledge. The policies, standard operating procedures, clinical guidelines, HR regulations, and facility protocols that every staff member, from physicians to logistics coordinators, needs to do their job effectively. And unlike patient data, this information doesn't have the same GDPR or HIPAA constraints, making it a promising candidate for AI-powered solutions.
 
-In this project, we design a multi-agent information retrieval system to save hundreds of hours of healthcare workers. Let's dive in!!!
-
+In this project, we design a multi-agent information retrieval system to save hundreds of hours for healthcare workers. Let's dive in!
 
 A sophisticated multi-agent system built with Google ADK (Application Development Kit) and Vertex AI Search that intelligently routes queries to specialized AI agents for hospital staff. The system includes a **Help/Onboarding Agent** (Priority 1) that guides new users on how to use the system before routing to domain experts.
 
@@ -36,8 +35,14 @@ A sophisticated multi-agent system built with Google ADK (Application Developmen
 - **Real-Time Medication Tracking**: Check medication inventory, batch information, storage requirements, and controlled substance status
 - **Contextual Conversations**: Maintains conversation history for follow-up questions and deeper exploration
 - **Document-Grounded Responses**: All answers are backed by verified hospital documents with proper citations
+- **Plug-and-Play Expansion**: Easily integrate new data sources to cover more domains (e.g., finance, compliance) or enrich clinical context such as medication history or anamnesis reports
 
 ## 🎯 Try These Sample Queries
+
+### Help Agent
+- How can I use this tool?
+- How can I use the tool for getting HR ?
+- Hoe kan ik het gebruiken om informatie over apotheken te krijgen?
 
 ### Nursing (English/Spanish)
 - "How do I insert an IV line?"
