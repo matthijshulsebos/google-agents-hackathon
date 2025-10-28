@@ -1,0 +1,51 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: hospital-agent-api
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/maxScale: '10'
+        autoscaling.knative.dev/minScale: '0'
+        run.googleapis.com/client-name: gcloud
+    spec:
+      serviceAccountName: hospital-chat-sa@qwiklabs-gcp-04-488d2ba9611d.iam.gserviceaccount.com
+      containerConcurrency: 80
+      timeoutSeconds: 300
+      containers:
+      - image: gcr.io/qwiklabs-gcp-04-488d2ba9611d/hospital-agent-api:latest
+        ports:
+        - containerPort: 8080
+        resources:
+          limits:
+            cpu: '2'
+            memory: 2Gi
+        env:
+        - name: GCP_PROJECT_ID
+          value: qwiklabs-gcp-04-488d2ba9611d
+        - name: GCP_LOCATION
+          value: us-central1
+        - name: NURSING_DATASTORE_ID
+          value: poc-medical-csv-data_1761595774470
+        - name: HR_DATASTORE_ID
+          value: poc-medical-csv-data_1761595774470
+        - name: PHARMACY_DATASTORE_ID
+          value: poc-medical-csv-data_1761595774470
+        - name: MODEL_NAME
+          value: gemini-2.5-flash
+        - name: TEMPERATURE
+          value: '0.2'
+        - name: DYNAMIC_THRESHOLD
+          value: '0.3'
+        - name: MAX_RESULTS
+          value: '5'
+        - name: LOG_LEVEL
+          value: INFO
+        - name: TIMEOUT
+          value: '30'
+        - name: ENVIRONMENT
+          value: production
+  traffic:
+  - percent: 100
+    latestRevision: true

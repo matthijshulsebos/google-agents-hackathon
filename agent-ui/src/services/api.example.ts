@@ -16,7 +16,7 @@ import {
   ChatMessage
 } from '../types';
 
-const API_BASE_URL = process.env.VITE_API_BASE_URL || 'https://api.medassist.com/v1';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://api.medassist.com/v1';
 
 // Helper function to get auth token
 const getAuthToken = (): string => {
@@ -122,7 +122,7 @@ export class WebSocketService {
   private listeners: Map<string, Set<Function>> = new Map();
 
   connect() {
-    const wsUrl = process.env.VITE_WS_URL || 'wss://api.medassist.com/v1/ws';
+    const wsUrl = import.meta.env.VITE_WS_URL || 'wss://api.medassist.com/v1/ws';
     this.ws = new WebSocket(wsUrl);
 
     this.ws.onopen = () => {

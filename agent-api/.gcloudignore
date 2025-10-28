@@ -1,0 +1,80 @@
+# This file specifies files that are intentionally not uploaded to
+# Google Cloud. See https://cloud.google.com/sdk/gcloud/reference/topic/gcloudignore
+
+.gcloudignore
+.git
+.gitignore
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+hospital-app/venv/
+
+# Testing
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.hypothesis/
+tests/
+test_*.py
+test_*.sh
+*_test.py
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Documentation and plans
+*.md
+!README.md
+docs/
+plans/
+outputs/
+
+# Environment files (will use Cloud Run env vars instead)
+.env
+.env.*
+
+# Service account keys (Cloud Run uses its own service account)
+*.json
+sakey.json
+
+# Demo files
+demo.py
+demo_*.py
+demo_ui.py
+
+# Development files
+tiago-app/
+hospital-app/

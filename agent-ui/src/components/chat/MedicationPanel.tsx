@@ -1,6 +1,6 @@
 import React from 'react';
 import { MedicationInventoryItem } from '../../types/api';
-import { Package, AlertTriangle, CheckCircle, MapPin, Thermometer, Calendar } from 'lucide-react';
+import { Package, AlertTriangle, CheckCircle, MapPin, Calendar } from 'lucide-react';
 
 interface MedicationPanelProps {
   medications: MedicationInventoryItem[];

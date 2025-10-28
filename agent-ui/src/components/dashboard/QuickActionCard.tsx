@@ -3,7 +3,6 @@ import { QuickAction } from '../../types';
 import { Calendar, Pill, ClipboardList, Activity, AlertTriangle } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { useChatMessages } from '../../hooks/useChatMessages';
-import { scheduleDataMock, protocolDataMock } from '../../data/mockData';
 
 const iconMap: Record<string, React.ElementType> = {
   Calendar,
@@ -24,8 +23,6 @@ const QuickActionCard: React.FC<QuickActionCardProps> = ({ action }) => {
 
   const handleClick = () => {
     let userMessage = '';
-    let scheduleData = undefined;
-    let protocolData = undefined;
 
     switch (action.id) {
       case 'schedule':
@@ -55,7 +52,7 @@ const QuickActionCard: React.FC<QuickActionCardProps> = ({ action }) => {
     addChatMessage(userMsg);
 
     // Simulate bot response
-    simulateBotResponse(userMessage, addChatMessage);
+    simulateBotResponse(userMessage, addChatMessage, () => {});
   };
 
   return (
