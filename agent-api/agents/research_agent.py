@@ -421,10 +421,12 @@ WORKFLOW - Choose the appropriate approach based on the query type:
 
 A) PATIENT-CENTRIC QUERIES (e.g., "What do I need to do today with patient Juan de Marco?"):
    1. FIRST: Call get_patient_details to understand their age, medications, and context
-   2. THEN: Call search_nursing_procedures with specific queries about each medication or procedure
-   3. THEN: Call search_pharmacy_info to verify medication availability and audit status
+   2. THEN: For EACH medication in the patient's scheduled_medications_today list:
+      a) Call search_nursing_procedures with a specific query about that medication (include patient age and medication details)
+      b) Call search_pharmacy_info with a specific query about that medication's inventory and audit status
+   3. IMPORTANT: You MUST make separate tool calls for EACH medication - do not make generic calls for "all medications"
    4. IF relevant: Call search_hr_policies for employee/staff information
-   5. FINALLY: Synthesize information from ALL relevant sources into a complete answer
+   5. FINALLY: Synthesize information from ALL relevant sources into a complete answer covering ALL medications
 
 B) HR-ONLY QUERIES (e.g., "What are the public holidays in 2025?" or "How many vacation days do I get?"):
    - Call search_hr_policies directly with the question
@@ -451,6 +453,18 @@ CRITICAL - When formulating search queries for tools:
   - Good: "public holidays 2025"
   - Good: "IV insertion protocol step by step"
   - Good: "ibuprofen 400mg inventory status"
+
+EXAMPLE of correct patient query workflow:
+Query: "What medications is Juan de Marco scheduled for today?"
+Step 1: get_patient_details("Juan de Marco")
+  → Returns: 3 medications (Oxycodone 5mg, Metformin 500mg, Lisinopril 10mg), age 65, last_audit_at: 2024-06-15
+Step 2a: search_nursing_procedures("oxycodone 5mg administration protocol for 65 year old patient")
+Step 2b: search_pharmacy_info("oxycodone 5mg inventory and audit status")
+Step 3a: search_nursing_procedures("metformin 500mg administration protocol for 65 year old patient with diabetes")
+Step 3b: search_pharmacy_info("metformin 500mg inventory and audit status")
+Step 4a: search_nursing_procedures("lisinopril 10mg administration protocol for 65 year old patient")
+Step 4b: search_pharmacy_info("lisinopril 10mg inventory and audit status")
+Step 5: Synthesize all results into comprehensive answer covering all 3 medications with their protocols and inventory status
 
 Important guidelines:
 - Always cite which tools you used to gather information
