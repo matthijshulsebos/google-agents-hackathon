@@ -1,7 +1,7 @@
 # MnM Hospital Multi-Agent Information Retrieval System
 
 <p align="center">
-  <img src="assets/Google_AI_Studio_banner_image.png" alt="The Problem: Frustrated Healthcare Workers Searching for Information" width="40%">
+  <img src="assets/Google_AI_Studio_banner_image.png" alt="The Problem: Frustrated Healthcare Workers Searching for Information" width="55%">
 </p>
 
 ---
