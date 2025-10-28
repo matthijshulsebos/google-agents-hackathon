@@ -12,7 +12,7 @@ Twenty minutes later, after checking three different locations and skimming thro
 
 The process still isn't done. Does she even have the medication the doctor prescribed? What is the procedure to check medication availability in pharmacy inventory? She remembers seeing something about it in the onboarding document. But where is that document now? Nerve-wracking...
 
-Of course, this is a hypothetical situation, yet similar scenarios play out thousands of times daily across hospitals worldwide. The problem isn't a lack of information. Modern hospitals are drowning in policies, procedures, protocols, and guidelines. The problem is retrieval: getting the right information to the right person at the right time, in a format they can act upon.
+Of course, this is a hypothetical situation, yet similar scenarios play out thousands of times daily across hospitals worldwide. The problem isn't a lack of information. Modern hospitals are drowning in policies, procedures, protocols, and guidelines. The problem is **retrieval**: getting the right information to the right person at the right time, in a format they can act upon.
 
 But here's what makes this particularly interesting: we're not talking about patient data retrieval. We're talking about institutional knowledge. The policies, standard operating procedures, clinical guidelines, HR regulations, and facility protocols that every staff member, from physicians to logistics coordinators, needs to do their job effectively. And unlike patient data, this information doesn't have the same GDPR or HIPAA constraints, making it a promising candidate for AI-powered solutions.
 
@@ -41,7 +41,7 @@ A sophisticated multi-agent system built with Google ADK (Application Developmen
 
 ### Help Agent
 - How can I use this tool?
-- How can I use the tool for getting HR ?
+- How can I use the tool for getting HR information?
 - Hoe kan ik het gebruiken om informatie over apotheken te krijgen?
 
 ### Nursing (English/Spanish)
